@@ -9,11 +9,11 @@ import subprocess
 # Enviromental Settings
 # --------------------------------------------------------------------------------------------------
 # Define path to GRASS GIS launch skript -------------------------------------------------------
-grass7bin_win = r'C:\\Program Files\\QGIS 3.4\\bin\\grass74.bat'
+grass7bin_win = 'C:\\Program Files\\QGIS 2.18\\bin\\grass72.bat'
 
 # DATA -----------------------------------------------------------------------------------------
 # define GRASS DATABASE
-gisdb = r"S:\\Documents\\GRASS_GIS_DB\\GSCPY\\PERMANENT"
+gisdb = "C:\\newLocation\\PERMANENT"
 # gisdb = os.path.join(os.path.expanduser("~"), "grassdata")
 
 # GRASS GIS SOFTWARE ---------------------------------------------------------------------------
@@ -27,6 +27,11 @@ if p.returncode != 0:
     print >>sys.stderr, "ERROR: Cannot find GRASS GIS 7 start script (%s)" % startcmd
     sys.exit(-1)
 
+if isinstance(out, bytes):
+    out = out.decode('utf-8')
+else:
+    pass
+
 gisbase = out.strip('\n\r')
 
 # Environmental Variables -----------------------------------------------------------------------
@@ -37,8 +42,7 @@ os.environ['GISBASE'] = gisbase
 os.environ['PATH'] += os.pathsep + os.path.join(gisbase, 'extrabin')
 # add path to GRASS addons
 home = os.path.expanduser("~")
-os.environ['PATH'] += os.pathsep + \
-    os.path.join(home, '.grass7', 'addons', 'scripts')
+os.environ['PATH'] += os.pathsep + os.path.join(home, '.grass7', 'addons', 'scripts')
 
 # define GRASS-Python environment
 gpydir = os.path.join(gisbase, "etc", "python")
