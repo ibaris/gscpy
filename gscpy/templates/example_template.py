@@ -73,7 +73,9 @@ def main():
     swathidentifier = options['swathidentifier']
 
     region = options['region']
-    print(region)
+
+
+
 
 
     return 0
