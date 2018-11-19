@@ -96,8 +96,8 @@ class S1Import(object):
         else:
             self.extension = '.img'
 
-        if pattern:
-            filter_p = options['pattern'] + extension
+        if pattern is not None:
+            filter_p = pattern + extension
         else:
             filter_p = r'S1*__*' + extension
 
