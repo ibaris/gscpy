@@ -16,6 +16,7 @@
 #
 #############################################################################
 
+"""
 #%module
 #% description: Wrapper function for geocoding SAR images using ESA SNAP.
 #% keyword: processing
@@ -51,6 +52,7 @@
 # Output Section -------------------------------------------------------------------------------------------------------
 #%option G_OPT_F_INPUT
 #% key: outdir
+#% required: no
 #% multiple: no
 #% description: The directory to write the final files to:
 #%guisection: Input
@@ -155,11 +157,13 @@
 #% description: Write only the workflow in xml file:
 #% guisection: Optional
 #%end
+"""
 
-import sys
 import os
-from pyroSAR.snap.util import geocode
+import sys
+
 import grass.script as gscript
+from pyroSAR.snap.util import geocode
 
 
 def main():
@@ -231,7 +235,6 @@ def main():
         test = True
     else:
         test = False
-
 
     geocode(infile, outdir, t_srs=t_srs, tr=tr, polarizations=polarizations, shapefile=shapefile, scaling=scaling,
             geocoding_type=geocoding_type, removeS1BoderNoise=removeS1BoderNoise, offset=offset,
