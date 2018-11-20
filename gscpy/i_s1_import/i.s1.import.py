@@ -26,7 +26,7 @@
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
 #% key: input
-#% description: Name for input directory where downloaded Sentinel data lives
+#% description: Directory where the scenes are:
 #% required: yes
 #%guisection: Input
 #%end
@@ -44,7 +44,7 @@
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
-#% description: File name pattern to import
+#% description: File name pattern to import:
 #% guisection: Filter
 #%end
 
@@ -100,6 +100,20 @@ except ImportError as e:
 
 class S1Import(object):
     def __init__(self, dir, mapname=None, pattern=None, extension=None):
+        """
+        Import pre-processed (pr.geocode) Sentinel 1 data into a mapset.
+
+        Parameters
+        ----------
+        dir : str
+            Directory where the scenes are.
+        mapname : str
+            Mapname where the scenes where imported.
+        pattern : str
+            A pattern of filename which will be imported.
+        extension : {'ENVI', 'GEOTIFF'}
+            Which extensions should be recognized?
+        """
         # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 

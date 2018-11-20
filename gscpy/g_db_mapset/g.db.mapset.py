@@ -3,10 +3,8 @@
 ############################################################################
 #
 # MODULE:       c.database
-#
 # AUTHOR(S):    Ismail Baris
-#
-# PURPOSE:      Create a GRASS GIS Database
+# PURPOSE:      Create a GRASS GIS Database and a Mapset.
 #
 # COPYRIGHT:    (C) Ismail Baris and Nils von Norsinski
 #
@@ -62,7 +60,7 @@
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: l
-#% description: Launch mapset with GRASS GIS.
+#% description: Launch mapset with GRASS GIS
 #% guisection: Optional
 #%end
 """
@@ -77,7 +75,22 @@ import grass.script as gs
 
 class Database(object):
     def __init__(self, dir, mapset, t_srs=None, t_srs_from_file=None, launch=False):
+        """
+        Create a GRASS GIS Database and a Mapset.
 
+        Parameters
+        ----------
+        dir : str
+            Directory where the scenes are.
+        mapname : str
+            Mapname where the scenes where imported.
+        t_srs : int, optional
+            A EPSG Code for georeferencing.
+        t_srs_from_file : str
+            If t_srs is not used, a georeferenced file can be here uploaded.
+        launch : bool
+            If True, GRASS GIS will start with the new created mapset.
+        """
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------
         self.candidates = ['grass70', 'grass72', 'grass74']
 

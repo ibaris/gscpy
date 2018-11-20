@@ -4,7 +4,7 @@
 #
 # MODULE:       pr.geocode
 # AUTHOR(S):    Ismail Baris
-# PURPOSE:      Wrapper function for geocoding SAR images using ESA SNAP.
+# PURPOSE:      Wrapper function for geocoding SAR images pyroSAR.
 #
 # COPYRIGHT:    (C) Ismail Baris and Nils von Norsinski
 #
@@ -115,7 +115,7 @@
 # DEM Section ----------------------------------------------------------------------------------------------------------
 #%flag
 #% key: e
-#% description: Apply Earth Gravitational Model to external DEM?:
+#% description: Apply Earth Gravitational Model to external DEM?
 #% guisection: DEM
 #%end
 
@@ -154,7 +154,7 @@
 
 #%option
 #% key: pattern
-#% description: File name pattern to import
+#% description: File name pattern to import:
 #% guisection: Import
 #%end
 
@@ -179,13 +179,13 @@
 
 #%flag
 #% key: t
-#% description: Write only the workflow in xml file:
+#% description: Write only the workflow in xml file
 #% guisection: Optional
 #%end
 
 #%flag
 #% key: r
-#% description: Enables removal of S1 GRD border noise:
+#% description: Enables removal of S1 GRD border noise
 #% guisection: Optional
 #%end
 """
@@ -211,28 +211,61 @@ class Geocode(object):
                  externalDEMNoDataValue=None, externalDEMApplyEGM=True, basename_extensions=None, test=False,
                  verbose=False):
         """
+        Wrapper function for geocoding SAR images using pyroSAR.
 
         Parameters
         ----------
-        dir : str
-            Directory where
-        outdir
-        pattern
-        t_srs
-        tr
-        polarizations
-        shapefile
-        scaling
-        geocoding_type
-        removeS1BoderNoise
-        offset
-        externalDEMFile
-        externalDEMNoDataValue
-        externalDEMApplyEGM
-        basename_extensions
-        test
-        verbose
+        dir: str
+            Directory where the Sentinel-Data is.
+        outdir: str
+            The directory to write the final files to.
+        t_srs: int, str or osr.SpatialReference
+            A target geographic reference system in WKT, EPSG, PROJ4 or OPENGIS format.
+            See function :func:`spatialist.auxil.crsConvert()` for details.
+            Default: `4326 <http://spatialreference.org/ref/epsg/4326/>`_.
+        tr: int or float, optional
+            The target resolution in meters. Default is 20
+        polarizations: list or {'VV', 'HH', 'VH', 'HV', 'all'}, optional
+            The polarizations to be processed; can be a string for a single polarization e.g. 'VV' or a list of several
+            polarizations e.g. ['VV', 'VH']. Default is 'all'.
+        shapefile: str or :py:class:`~spatialist.vector.Vector`, optional
+            A vector geometry for subsetting the SAR scene to a test site. Default is None.
+        scaling: {'dB', 'db', 'linear'}, optional
+            Should the output be in linear or decibel scaling? Default is 'dB'.
+        geocoding_type: {'Range-Doppler', 'SAR simulation cross correlation'}, optional
+            The type of geocoding applied; can be either 'Range-Doppler' (default) or 'SAR simulation cross correlation'
+        removeS1BoderNoise: bool, optional
+            Enables removal of S1 GRD border noise (default).
+        offset: tuple, optional
+            A tuple defining offsets for left, right, top and bottom in pixels, e.g. (100, 100, 0, 0); this variable is
+            overridden if a shapefile is defined. Default is None.
+        externalDEMFile: str or None, optional
+            The absolute path to an external DEM file. Default is None.
+        externalDEMNoDataValue: int, float or None, optional
+            The no data value of the external DEM. If not specified (default) the function will try to read it from the
+            specified external DEM.
+        externalDEMApplyEGM: bool, optional
+            Apply Earth Gravitational Model to external DEM? Default is True.
+        basename_extensions: list of str
+            names of additional parameters to append to the basename, e.g. ['orbitNumber_rel']
+        test: bool, optional
+            If set to True the workflow xml file is only written and not executed. Default is False.
+
+        Note
+        ----
+        If only one polarization is selected the results are directly written to GeoTiff.
+        Otherwise the results are first written to a folder containing ENVI files and then transformed to GeoTiff files
+        (one for each polarization).
+        If GeoTiff would directly be selected as output format for multiple polarizations then a multilayer GeoTiff
+        is written by SNAP which is considered an unfavorable format
+
+        See Also
+        --------
+        :class:`pyroSAR.drivers.ID`,
+        :class:`spatialist.vector.Vector`,
+        :func:`spatialist.auxil.crsConvert()`
         """
+
         # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 
@@ -279,6 +312,13 @@ class Geocode(object):
     # Public Methods
     # ------------------------------------------------------------------------------------------------------------------
     def geocode(self):
+        """
+        Start the geocode process.
+
+        Returns
+        -------
+        None
+        """
         for infile in self.files:
             if self.verbose:
                 sys.stdout.write('Start Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
@@ -295,6 +335,21 @@ class Geocode(object):
                 sys.stdout.flush()
 
     def import_products(self, mapset, pattern=None, f=False, l=False, p=False):
+        """
+        Import the processed data into a mapset.
+
+        Parameters
+        ----------
+        mapset
+        pattern
+        f
+        l
+        p
+
+        Returns
+        -------
+
+        """
         args = {}
         args['input'] = self.dir
         args['mapset'] = mapset
