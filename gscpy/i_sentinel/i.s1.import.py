@@ -74,7 +74,12 @@ import re
 import sys
 
 import grass.script as gs
-from grass.exceptions import CalledModuleError
+
+try:
+    import grass.script as gs
+    from grass.exceptions import CalledModuleError
+except ImportError:
+    pass
 
 try:
     from osgeo import gdal, osr
@@ -87,7 +92,7 @@ class S1Import(object):
         self._dir_list = []
 
         if not os.path.exists(dir):
-            gs.fatal(_('Input directory <{}> not exists').format(dir))
+            gs.fatal(_('Input directory <{0}> not exists').format(dir))
         else:
             self.dir = dir
 
@@ -105,6 +110,10 @@ class S1Import(object):
 
         gs.debug('Filter: {}'.format(filter_p), 1)
         self.files = self.__filter(filter_p)
+
+        if self.files is []:
+            gs.message(_('No files detected. Note, that must be a point for * like: pattern = str.* '))
+            return
 
     # ------------------------------------------------------------------------------------------------------------------
     # Public Methods
@@ -134,8 +143,9 @@ class S1Import(object):
             # print self.__check_projection(f)
             # print self.__raster_epsg(f)
 
-            sys.stdout.write('{0} {1} (EPSG: {2}){3}'.format(str(f), '1' if self.__check_projection(f) else '0',
-                                                             str(self.__raster_epsg(f)), os.linesep))
+            sys.stdout.write(
+                'Detected File <{0}> {1} (EPSG: {2}){3}'.format(str(f), '1' if self.__check_projection(f) else '0',
+                                                                str(self.__raster_epsg(f)), os.linesep))
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
@@ -200,7 +210,7 @@ class S1Import(object):
             gs.raster_history(mapname)
 
         except CalledModuleError as e:
-            pass  # error already printed
+            pass
 
 
 def main():

@@ -32,14 +32,6 @@
 #%guisection: Input
 #%end
 
-#%option G_OPT_F_INPUT
-#% key: shapefile
-#% required: no
-#% multiple: no
-#% description: A vector geometry for subsetting the SAR scene to a test site:
-#%guisection: Input
-#%end
-
 #%option
 #% key: epsg
 #% required: no
@@ -54,7 +46,7 @@
 #% required: no
 #% multiple: no
 #% description: The directory to write the final files to:
-#%guisection: Input
+#%guisection: Output
 #%end
 
 #%option
@@ -88,6 +80,24 @@
 #% guisection: Output
 #%end
 
+# Subset Section -------------------------------------------------------------------------------------------------------
+#%option
+#% key: offset
+#% type: integer
+#% required: no
+#% multiple: yes
+#% description: Integers defining offsets for left, right, top and bottom in pixels, e.g. 100, 100, 0, 0:
+#% guisection: Subset
+#%end
+
+#%option G_OPT_F_INPUT
+#% key: shapefile
+#% required: no
+#% multiple: no
+#% description: A vector geometry for subsetting the SAR scene to a test site:
+#%guisection: Input
+#%end
+
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
@@ -95,42 +105,22 @@
 #% guisection: Filter
 #%end
 
-# Optional Section -----------------------------------------------------------------------------------------------------
 #%option
 #% key: polarizations
 #% type: string
 #% required: no
 #% multiple: yes
 #% description: The polarizations to be processed (Default is 'all'):
-#% guisection: Optional
+#% guisection: Filter
 #%end
 
-#%option
-#% key: remove_boder_noise
-#% type: string
-#% required: no
-#% multiple: no
-#% answer: True
-#% options: True, False
-#% description: Enables removal of S1 GRD border noise:
-#% guisection: Optional
-#%end
-
-#%option
-#% key: offset
-#% type: integer
-#% required: no
-#% multiple: yes
-#% description: Integers defining offsets for left, right, top and bottom in pixels, e.g. 100, 100, 0, 0:
-#% guisection: Optional
-#%end
-
+# DEM Section ----------------------------------------------------------------------------------------------------------
 #%option G_OPT_F_INPUT
 #% key: external_dem_file
 #% required: no
 #% multiple: no
 #% description: The absolute path to an external DEM file:
-#%guisection: Optional
+#%guisection: DEM
 #%end
 
 #%option
@@ -139,7 +129,7 @@
 #% required: no
 #% multiple: no
 #% description: The no data value of the external DEM:
-#% guisection: Optional
+#% guisection: DEM
 #%end
 
 #%option
@@ -150,6 +140,13 @@
 #% answer: True
 #% options: True, False
 #% description: Apply Earth Gravitational Model to external DEM?:
+#% guisection: DEM
+#%end
+
+# Optional Section -----------------------------------------------------------------------------------------------------
+#%flag
+#% key: p
+#% description: Print raster data to be imported and exit
 #% guisection: Optional
 #%end
 
@@ -164,21 +161,31 @@
 #% guisection: Optional
 #%end
 
-# Print Section --------------------------------------------------------------------------------------------------------
-#%flag
-#% key: p
-#% description: Print raster data to be imported and exit
-#% guisection: Print
+#%option
+#% key: remove_boder_noise
+#% type: string
+#% required: no
+#% multiple: no
+#% answer: True
+#% options: True, False
+#% description: Enables removal of S1 GRD border noise:
+#% guisection: Optional
 #%end
 """
 
-import os
-import sys
-import re
 import datetime as dt
+import os
+import re
+import sys
 
 import grass.script as gs
 from pyroSAR.snap.util import geocode
+
+try:
+    import grass.script as gs
+
+except ImportError:
+    pass
 
 
 class Geocode(object):
@@ -236,8 +243,8 @@ class Geocode(object):
     def geocode(self):
         for infile in self.files:
             if self.verbose:
-                sys.stdout.write('Start Time: {0}'.format(dt.datetime.utcnow().__str__()))
-                sys.stdout.write('Start Processing File: {0} {1}'.format(str(os.path.basename(infile)), os.linesep))
+                sys.stdout.write('Start Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
+                sys.stdout.write('Start Processing File: <{0}> {1}'.format(str(os.path.basename(infile)), os.linesep))
 
             geocode(infile, self.outdir, t_srs=self.t_srs, tr=self.tr, polarizations=self.polarizations,
                     shapefile=self.shapefile, scaling=self.scaling, geocoding_type=self.geocoding_type,
@@ -246,12 +253,12 @@ class Geocode(object):
                     externalDEMApplyEGM=self.externalDEMApplyEGM, test=self.test)
 
             if self.verbose:
-                sys.stdout.write('End Time: {0}'.format(dt.datetime.utcnow().__str__()))
+                sys.stdout.write('End Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
                 sys.stdout.flush()
 
     def print_products(self):
         for f in self.files:
-            sys.stdout.write('{0} {1}'.format(str(f), os.linesep))
+            sys.stdout.write('Detected File <{0}> {1}'.format(str(f), os.linesep))
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
@@ -275,8 +282,6 @@ class Geocode(object):
 
 
 def main():
-    options, flags = gs.parser()
-
     dir = options['dir']
     outdir = options['outdir']
     shapefile = options['shapefile']
@@ -368,4 +373,5 @@ def main():
 
 
 if __name__ == "__main__":
+    options, flags = gs.parser()
     sys.exit(main())
