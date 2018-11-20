@@ -3,9 +3,7 @@
 ############################################################################
 #
 # MODULE:       pr.geocode
-#
 # AUTHOR(S):    Ismail Baris
-#
 # PURPOSE:      Wrapper function for geocoding SAR images using ESA SNAP.
 #
 # COPYRIGHT:    (C) Ismail Baris and Nils von Norsinski
@@ -28,7 +26,7 @@
 #%option G_OPT_M_DIR
 #% key: dir
 #% multiple: no
-#% description: Name for input directory where Sentinel data lives:
+#% description: Name for input directory where the processed data is:
 #%guisection: Input
 #%end
 
@@ -95,7 +93,7 @@
 #% required: no
 #% multiple: no
 #% description: A vector geometry for subsetting the SAR scene to a test site:
-#%guisection: Input
+#%guisection: Subset
 #%end
 
 # Filter Section -------------------------------------------------------------------------------------------------------
@@ -115,6 +113,12 @@
 #%end
 
 # DEM Section ----------------------------------------------------------------------------------------------------------
+#%flag
+#% key: e
+#% description: Apply Earth Gravitational Model to external DEM?:
+#% guisection: DEM
+#%end
+
 #%option G_OPT_F_INPUT
 #% key: external_dem_file
 #% required: no
@@ -132,15 +136,38 @@
 #% guisection: DEM
 #%end
 
+# Auto Import Section --------------------------------------------------------------------------------------------------
+#%flag
+#% key: i
+#% description: Import processed imagery to a mapset
+#% guisection: Import
+#%end
+
 #%option
-#% key: external_dem_egm
+#% key: mapset
 #% type: string
-#% required: no
 #% multiple: no
-#% answer: True
-#% options: True, False
-#% description: Apply Earth Gravitational Model to external DEM?:
-#% guisection: DEM
+#% required: no
+#% description: Name of the desired mapset:
+#%guisection: Import
+#%end
+
+#%option
+#% key: pattern
+#% description: File name pattern to import
+#% guisection: Import
+#%end
+
+#%flag
+#% key: r
+#% description: Reproject raster data using r.import if needed
+#% guisection: Settings
+#%end
+
+#%flag
+#% key: l
+#% description: Link raster data instead of importing
+#% guisection: Settings
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
@@ -150,24 +177,14 @@
 #% guisection: Optional
 #%end
 
-#%option
-#% key: test
-#% type: string
-#% required: no
-#% multiple: no
-#% answer: False
-#% options: True, False
+#%flag
+#% key: t
 #% description: Write only the workflow in xml file:
 #% guisection: Optional
 #%end
 
-#%option
-#% key: remove_boder_noise
-#% type: string
-#% required: no
-#% multiple: no
-#% answer: True
-#% options: True, False
+#%flag
+#% key: r
 #% description: Enables removal of S1 GRD border noise:
 #% guisection: Optional
 #%end
@@ -183,7 +200,7 @@ from pyroSAR.snap.util import geocode
 
 try:
     import grass.script as gs
-
+    from grass.exceptions import CalledModuleError
 except ImportError:
     pass
 
@@ -193,8 +210,30 @@ class Geocode(object):
                  geocoding_type='Range-Doppler', removeS1BoderNoise=True, offset=None, externalDEMFile=None,
                  externalDEMNoDataValue=None, externalDEMApplyEGM=True, basename_extensions=None, test=False,
                  verbose=False):
+        """
 
-        # Initialize DIRS ----------------------------------------------------------------------------------------------
+        Parameters
+        ----------
+        dir : str
+            Directory where
+        outdir
+        pattern
+        t_srs
+        tr
+        polarizations
+        shapefile
+        scaling
+        geocoding_type
+        removeS1BoderNoise
+        offset
+        externalDEMFile
+        externalDEMNoDataValue
+        externalDEMApplyEGM
+        basename_extensions
+        test
+        verbose
+        """
+        # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 
         if not os.path.exists(dir):
@@ -221,7 +260,6 @@ class Geocode(object):
         self.files = self.__filter(filter_p)
 
         # Self definitions ---------------------------------------------------------------------------------------------
-
         self.t_srs = t_srs
         self.tr = tr
         self.polarizations = polarizations
@@ -255,6 +293,31 @@ class Geocode(object):
             if self.verbose:
                 sys.stdout.write('End Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
                 sys.stdout.flush()
+
+    def import_products(self, mapset, pattern=None, f=False, l=False, p=False):
+        args = {}
+        args['input'] = self.dir
+        args['mapset'] = mapset
+        args['f'] = f
+        args['l'] = l
+        args['p'] = p
+        args['extension'] = 'GEOTIFF'
+
+        if pattern:
+            args['pattern'] = pattern
+        else:
+            args['pattern'] = ''
+
+
+        gs.message(_('Processing <{}>...').format(mapset))
+        module = 'i.s1.import'
+
+        try:
+            gs.run_command(module, input=self.dir, mapset=mapset, **args)
+            gs.raster_history(mapset)
+
+        except CalledModuleError as e:
+            pass
 
     def print_products(self):
         for f in self.files:
@@ -290,12 +353,9 @@ def main():
     scaling = options['scaling']
     geocoding_type = options['geocoding_type']
     polarizations = options['polarizations']
-    removeS1BoderNoise = options['remove_boder_noise']
     offset = options['offset']
     externalDEMFile = options['external_dem_file']
     externalDEMNoDataValue = options['external_dem_nan']
-    externalDEMApplyEGM = options['external_dem_egm']
-    test = options['test']
 
     if options['pattern'] == '':
         pattern = None
@@ -326,11 +386,6 @@ def main():
     else:
         polarizations = [polarizations]
 
-    if removeS1BoderNoise is 'True':
-        removeS1BoderNoise = True
-    else:
-        removeS1BoderNoise = False
-
     if offset is '':
         offset = None
     else:
@@ -346,28 +401,17 @@ def main():
     else:
         externalDEMNoDataValue = int(externalDEMNoDataValue)
 
-    if externalDEMApplyEGM is 'True':
-        externalDEMApplyEGM = True
-    else:
-        externalDEMApplyEGM = False
-
-    if test is 'True':
-        test = True
-    else:
-        test = False
-
-    if flags['p']:
-        verbose = True
-    else:
-        verbose = False
-
     pp_geocode = Geocode(dir=dir, outdir=outdir, pattern=pattern, t_srs=t_srs, tr=tr, polarizations=polarizations,
                          shapefile=shapefile, scaling=scaling, geocoding_type=geocoding_type,
-                         removeS1BoderNoise=removeS1BoderNoise, offset=offset, externalDEMFile=externalDEMFile,
-                         externalDEMNoDataValue=externalDEMNoDataValue, externalDEMApplyEGM=externalDEMApplyEGM,
-                         test=test, verbose=verbose)
+                         removeS1BoderNoise=flags['r'], offset=offset, externalDEMFile=externalDEMFile,
+                         externalDEMNoDataValue=externalDEMNoDataValue, externalDEMApplyEGM=flags['e'],
+                         test=flags['t'], verbose=flags['p'])
 
     pp_geocode.geocode()
+
+    if flags['i']:
+        pp_geocode.import_products(mapset=options['mapset'], pattern=options['pattern'], f=flags['f'], l=flags['l'],
+                                   p=flags['p'])
 
     return 0
 
