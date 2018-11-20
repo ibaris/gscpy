@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-#
+
 ############################################################################
 #
 # MODULE:      i.s1.import
 # AUTHOR(S):   Ismail Baris
-# PURPOSE:     Imports Sentinel 1 data downloaded from Copernicus Open Access Hub
+# PURPOSE:     Import Sentinel 1 Data Processed with pr.geocode.
 #
 # COPYRIGHT:   (C) Ismail Baris and Nils von Norsinski
 #
@@ -16,7 +16,7 @@
 
 """
 #%Module
-#% description: Imports Sentinel 1 satellite data downloaded from Copernicus Open Access Hub.
+#% description: Import Sentinel 1 Data processed with pr.geocode.
 #% keyword: imagery
 #% keyword: satellite
 #% keyword: Sentinel
@@ -28,7 +28,18 @@
 #% key: input
 #% description: Name for input directory where downloaded Sentinel data lives
 #% required: yes
+#%guisection: Input
 #%end
+
+#%option
+#% key: mapset
+#% type: string
+#% multiple: no
+#% required: no
+#% description: Name of the desired mapset:
+#%guisection: Input
+#%end
+
 
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
@@ -61,11 +72,11 @@
 #% guisection: Settings
 #%end
 
-# Print Section --------------------------------------------------------------------------------------------------------
+# Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
 #% description: Print raster data to be imported and exit
-#% guisection: Print
+#% guisection: Optional
 #%end
 """
 
@@ -88,7 +99,8 @@ except ImportError as e:
 
 
 class S1Import(object):
-    def __init__(self, dir, pattern=None, extension=None):
+    def __init__(self, dir, mapname=None, pattern=None, extension=None):
+        # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 
         if not os.path.exists(dir):
@@ -96,15 +108,16 @@ class S1Import(object):
         else:
             self.dir = dir
 
+        # Create Pattern and find files --------------------------------------------------------------------------------
         if extension is not None:
             self.extension = extension
         else:
             self.extension = '.img'
 
         if pattern is not None:
-            filter_p = pattern + extension
+            filter_p = pattern + self.extension
         else:
-            filter_p = r'S1*__*' + extension
+            filter_p = '.*' + self.extension
 
         self.filter_p = filter_p
 
@@ -114,6 +127,9 @@ class S1Import(object):
         if self.files is []:
             gs.message(_('No files detected. Note, that must be a point for * like: pattern = str.* '))
             return
+
+        # Self definitions ---------------------------------------------------------------------------------------------
+        self.mapname = mapname
 
     # ------------------------------------------------------------------------------------------------------------------
     # Public Methods
@@ -136,7 +152,7 @@ class S1Import(object):
                         gs.fatal(_('Projection of dataset does not appear to match current location. '
                                    'Force reprojecting dataset by -r flag.'))
 
-                self.__import_file(f, module, args)
+                self.__import_file(f, module, args, self.mapname)
 
     def print_products(self):
         for f in self.files:
@@ -197,8 +213,11 @@ class S1Import(object):
 
         return ret
 
-    def __import_file(self, filename, module, args):
-        mapname = os.path.splitext(os.path.basename(filename))[0]
+    def __import_file(self, filename, module, args, mapname=None):
+        if mapname is None:
+            mapname = os.path.splitext(os.path.basename(filename))[0]
+        else:
+            pass
 
         gs.message(_('Processing <{}>...').format(mapname))
 
@@ -224,7 +243,12 @@ def main():
     else:
         extension = '.tif*'
 
-    importer = S1Import(options['input'], pattern, extension)
+    if options['mapset'] == '':
+        mapset = None
+    else:
+        mapset = options['mapset']
+
+    importer = S1Import(options['input'], pattern=pattern, extension=extension, mapname=mapset)
 
     if flags['p']:
         importer.print_products()
