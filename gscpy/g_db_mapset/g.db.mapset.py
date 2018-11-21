@@ -93,7 +93,7 @@ class Database(object):
         """
 
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------
-        self.candidates = ['grass70', 'grass72', 'grass74']
+        self.candidates = ['grass70', 'grass71', 'grass72', 'grass73', 'grass74']
 
         # Check Georeference -------------------------------------------------------------------------------------------
         if t_srs is None and t_srs_from_file is None:
