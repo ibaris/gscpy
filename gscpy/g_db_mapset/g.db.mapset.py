@@ -91,6 +91,7 @@ class Database(object):
         launch : bool
             If True, GRASS GIS will start with the new created mapset.
         """
+
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------
         self.candidates = ['grass70', 'grass72', 'grass74']
 
