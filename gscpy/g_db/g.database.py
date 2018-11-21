@@ -70,8 +70,10 @@ import re
 import subprocess
 import sys
 
-import grass.script as gs
-
+try:
+    import grass.script as gs
+except ImportError:
+    pass
 
 class Database(object):
     def __init__(self, dir, mapset, t_srs=None, t_srs_from_file=None, launch=False):
