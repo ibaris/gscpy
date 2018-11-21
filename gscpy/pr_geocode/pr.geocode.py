@@ -144,15 +144,6 @@
 #%end
 
 #%option
-#% key: mapset
-#% type: string
-#% multiple: no
-#% required: no
-#% description: Name of the desired mapset:
-#%guisection: Import
-#%end
-
-#%option
 #% key: pattern
 #% description: File name pattern to import:
 #% guisection: Import
@@ -334,13 +325,12 @@ class Geocode(object):
                 sys.stdout.write('End Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
                 sys.stdout.flush()
 
-    def import_products(self, mapset, pattern=None, f=False, l=False, p=False):
+    def import_products(self, pattern=None, f=False, l=False, p=False):
         """
         Import the processed data into a mapset.
 
         Parameters
         ----------
-        mapset
         pattern
         f
         l
@@ -352,7 +342,6 @@ class Geocode(object):
         """
         args = {}
         args['input'] = self.dir
-        args['mapset'] = mapset
         args['f'] = f
         args['l'] = l
         args['p'] = p
@@ -363,13 +352,10 @@ class Geocode(object):
         else:
             args['pattern'] = ''
 
-
-        gs.message(_('Processing <{}>...').format(mapset))
         module = 'i.s1.import'
 
         try:
-            gs.run_command(module, input=self.dir, mapset=mapset, **args)
-            gs.raster_history(mapset)
+            gs.run_command(module, input=self.dir, **args)
 
         except CalledModuleError as e:
             pass
@@ -465,7 +451,7 @@ def main():
     pp_geocode.geocode()
 
     if flags['i']:
-        pp_geocode.import_products(mapset=options['mapset'], pattern=options['pattern'], f=flags['f'], l=flags['l'],
+        pp_geocode.import_products(pattern=options['pattern'], f=flags['f'], l=flags['l'],
                                    p=flags['p'])
 
     return 0
