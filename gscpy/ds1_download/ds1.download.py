@@ -114,8 +114,83 @@ try:
 except ImportError:
     pass
 
+from sentinelsat.sentinel import SentinelAPI, read_geojson, geojson_to_wkt
+
 def main():
-    print options
+    timestart = options['timestart']
+    timeend = options['timend']
+    orbitnumber = options['orbitnumber']
+    polarisationmode = options['polarisationmode']
+    producttype = options['producttype']
+    sensoroperationalmode = options['sensoroperationalmode']
+    swathidentifier = options['swathidentifier']
+    username = options['username']
+    password = options['password']
+
+    region = os.path.normpath(options['region'])
+    region = region.split("\\")
+    regs = ""
+    for i in region:
+        regs = regs + i + "\\" + "\\"
+
+    regs = regs[:-2]
+    region = regs
+
+    if options['polarisationmode'] == 'all':
+        polarisationmode = 'HH VV HV VH HH HV VV VH'
+    else:
+        polarisationmode = options['polarisationmode']
+
+    timestart_split = timestart.split('-')
+
+    timestart = ''
+    for item in timestart_split:
+        timestart += item
+
+    timeend_split = timeend.split('-')
+
+    timeend = ''
+    for item in timeend_split:
+        timeend += item
+
+    date = (timestart, timeend)
+
+    print (date)
+
+    if orbitnumber is '':
+        orbitnumber = None
+
+    if polarisationmode is '':
+        polarisationmode = None
+
+    if producttype is '':
+        producttype = None
+
+    if sensoroperationalmode is '':
+        sensoroperationalmode = None
+
+    if swathidentifier is '':
+        swathidentifier = None
+
+    # connect to the API
+    api = SentinelAPI(username, password, 'https://scihub.copernicus.eu/dhus')
+
+    # search by polygon, time, and Hub query keywords
+    footprint = geojson_to_wkt(read_geojson(region))
+    products = api.query(footprint,
+                         date=date,
+                         platformname='Sentinel-1')
+                         # orbitnumber=orbitnumber,
+                         # polarisationmode=polarisationmode,
+                         # producttype=producttype,
+                         # sensoroperationalmode=sensoroperationalmode,
+                         # swathidentifier=swathidentifier)
+
+
+    api.download_all(products)
+
+    # download all results from the search
+    api.download_all(products)
 
     return 0
 
