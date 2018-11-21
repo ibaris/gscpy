@@ -39,7 +39,7 @@
 #%end
 
 # Output Section -------------------------------------------------------------------------------------------------------
-#%option G_OPT_F_INPUT
+#%option G_OPT_M_DIR
 #% key: outdir
 #% required: no
 #% multiple: no
@@ -152,13 +152,13 @@
 #%flag
 #% key: r
 #% description: Reproject raster data using r.import if needed
-#% guisection: Settings
+#% guisection: Import
 #%end
 
 #%flag
 #% key: l
 #% description: Link raster data instead of importing
-#% guisection: Settings
+#% guisection: Import
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
@@ -268,7 +268,7 @@ class Geocode(object):
         if not os.path.exists(outdir):
             os.makedirs(outdir)
         else:
-            self.outdir = dir
+            self.outdir = outdir
 
         # Create Pattern and find files --------------------------------------------------------------------------------
         self.extension = '.zip'
