@@ -30,6 +30,13 @@
 #%guisection: Input
 #%end
 
+#%option G_OPT_M_DIR
+#% key: export
+#% description: Script directory of GRASS GIS (for Linux it can be detect automatically):
+#% required: no
+#%guisection: Input
+#%end
+
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
@@ -69,20 +76,29 @@ except ImportError:
 
 class Grassify(object):
     def __init__(self, dir, export_path=None, pattern=None, exclusion=None):
+
+        # Self Definitions ---------------------------------------------------------------------------------------------
         self.extension = '.py'
 
+        self.candidates = ['grass70', 'grass71', 'grass72', 'grass73', 'grass74']
         if exclusion is None:
-            self.exclusion = ['__init__.py', '__version__.py', 'setup_grass.py', 'gscpy.py']
+            self.exclusion = ['__init__.py', '__version__.py', 'setup_grass.py', 'gscpy.py', 'setup.py']
         else:
             self.exclusion = exclusion
 
+        # Initialize Directory -----------------------------------------------------------------------------------------
         if not os.path.exists(dir):
             gs.fatal(_('Input directory <{0}> not exists').format(dir))
         else:
             self.import_path = dir
 
+        # < Try to find the script directory of GRASS GIS > ------------
         if export_path is None:
-            self.export_path = os.path.dirname(gs.__file__)
+            for item in self.candidates:
+                export_path = '/usr/lib/' + item + '/scripts'
+
+                if os.path.exists(export_path):
+                    self.export_path = export_path
 
         elif export_path is not None:
             if not os.path.exists(export_path):
@@ -90,6 +106,7 @@ class Grassify(object):
 
             self.export_path = export_path
 
+        # Create Pattern and find files --------------------------------------------------------------------------------
         if pattern is None:
             filter_p = '.*' + self.extension
         else:
@@ -102,6 +119,33 @@ class Grassify(object):
             gs.message(_('No files detected. Note, that must be a point for * like: pattern = str.* '))
             return
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Public Methods
+    # ------------------------------------------------------------------------------------------------------------------
+    def copy(self, replace=False):
+        filename = [os.path.basename(item) for item in self.files]
+        filename_split = [os.path.splitext(item) for item in filename]
+
+        for i in range(len(filename_split)):
+            old_name = self.files[i]
+            base = filename_split[i][0]
+
+            new_name = os.path.join(self.export_path, base)
+
+            if not os.path.exists(new_name) or replace:
+                shutil.copy(old_name, new_name)
+            elif not replace and os.path.exists(new_name):
+                gs.fatal(_('Script <{0}> exists. Try to set the replace flag').format(base))
+
+        return 0
+
+    def print_products(self):
+        for f in self.files:
+            sys.stdout.write('Detected Files <{0}>'.format(f))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Private Methods
+    # ------------------------------------------------------------------------------------------------------------------
     def __filter(self, filter_p):
         pattern = re.compile(filter_p)
         files = []
@@ -124,27 +168,6 @@ class Grassify(object):
 
         return files
 
-    def copy(self, replace=False):
-        filename = [os.path.basename(item) for item in self.files]
-        filename_split = [os.path.splitext(item) for item in filename]
-
-        for i in range(len(filename_split)):
-            old_name = self.files[i]
-            base = filename_split[i][0]
-
-            new_name = os.path.join(self.export_path, base)
-
-            if not os.path.exists(new_name) or replace:
-                shutil.copy(old_name, new_name)
-            elif not replace and os.path.exists(new_name):
-                gs.fatal(_('Script <{0}> exists. Try to set the replace flag').format(base))
-
-        return 0
-
-    def print_products(self):
-        for f in self.files:
-            sys.stdout.write('Detected Files <{0}>'.format(f))
-
 
 def main():
     if options['pattern'] == '':
@@ -157,7 +180,12 @@ def main():
     else:
         exclusion = options['exclusion']
 
-    grassify = Grassify(options['input'], pattern=pattern, exclusion=exclusion)
+    if options['export'] == '':
+        export = None
+    else:
+        export = options['export']
+
+    grassify = Grassify(options['input'], export_path=export, pattern=pattern, exclusion=exclusion)
 
     if flags['p']:
         grassify.print_products()
