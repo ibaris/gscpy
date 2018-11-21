@@ -2,9 +2,9 @@
 
 ############################################################################
 #
-# MODULE:       c.database
+# MODULE:       g.database
 # AUTHOR(S):    Ismail Baris
-# PURPOSE:      Create a GRASS GIS Database and a Mapset.
+# PURPOSE:      Create a GRASS GIS Database AND a Mapset.
 #
 # COPYRIGHT:    (C) Ismail Baris and Nils von Norsinski
 #
