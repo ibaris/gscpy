@@ -331,14 +331,16 @@ class Geocode(object):
 
         Parameters
         ----------
-        pattern
-        f
-        l
-        p
+        pattern : str
+        f : bool
+        l : bool
+            Link raster data instead of importing.
+        p : bool
+            Print raster data to be imported and exit.
 
         Returns
         -------
-
+        None
         """
         args = {}
         args['input'] = self.dir
