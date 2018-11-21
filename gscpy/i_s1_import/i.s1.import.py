@@ -31,16 +31,6 @@
 #%guisection: Input
 #%end
 
-#%option
-#% key: mapset
-#% type: string
-#% multiple: no
-#% required: no
-#% description: Name of the desired mapset:
-#%guisection: Input
-#%end
-
-
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
@@ -84,8 +74,6 @@ import os
 import re
 import sys
 
-import grass.script as gs
-
 try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
@@ -99,7 +87,7 @@ except ImportError as e:
 
 
 class S1Import(object):
-    def __init__(self, dir, mapname=None, pattern=None, extension=None):
+    def __init__(self, dir, pattern=None, extension=None):
         """
         Import pre-processed (pr.geocode) Sentinel 1 data into a mapset.
 
@@ -142,9 +130,6 @@ class S1Import(object):
             gs.message(_('No files detected. Note, that must be a point for * like: pattern = str.* '))
             return
 
-        # Self definitions ---------------------------------------------------------------------------------------------
-        self.mapname = mapname
-
     # ------------------------------------------------------------------------------------------------------------------
     # Public Methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -166,7 +151,7 @@ class S1Import(object):
                         gs.fatal(_('Projection of dataset does not appear to match current location. '
                                    'Force reprojecting dataset by -r flag.'))
 
-                self.__import_file(f, module, args, self.mapname)
+                self.__import_file(f, module, args)
 
     def print_products(self):
         for f in self.files:
@@ -257,12 +242,7 @@ def main():
     else:
         extension = '.tif*'
 
-    if options['mapset'] == '':
-        mapset = None
-    else:
-        mapset = options['mapset']
-
-    importer = S1Import(options['input'], pattern=pattern, extension=extension, mapname=mapset)
+    importer = S1Import(options['input'], pattern=pattern, extension=extension)
 
     if flags['p']:
         importer.print_products()
