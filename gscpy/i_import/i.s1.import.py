@@ -25,8 +25,8 @@
 
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
-#% key: input
-#% description: Directory where the scenes are:
+#% key: input_dir
+#% description: The directory where the files are located.
 #% required: yes
 #%guisection: Input
 #%end
@@ -34,7 +34,7 @@
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
-#% description: File name pattern to import:
+#% description: The pattern of file names.
 #% guisection: Filter
 #%end
 
@@ -45,27 +45,60 @@
 #% multiple: no
 #% answer: ENVI
 #% options: ENVI, GEOTIFF
-#% description: Which file extension should be imported?:
+#% description: Which extension should be considered?
 #% guisection: Filter
 #%end
 
 # Settings Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: r
-#% description: Reproject raster data using r.import if needed
+#% description: Reproject raster data (using r.import if needed).
 #% guisection: Settings
 #%end
 
 #%flag
 #% key: l
-#% description: Link raster data instead of importing
+#% description: Link raster data instead of importing.
 #% guisection: Settings
+#%end
+
+# Mapset Section -------------------------------------------------------------------------------------------------------
+#%flag
+#% key: c
+#% description: Create a new mapset.
+#% guisection: Mapset
+#%end
+
+#%option
+#% key: mapset
+#% required: no
+#% type: string
+#% multiple: no
+#% description: Name of mapset:
+#%guisection: Mapset
+#%end
+
+#%option
+#% key: location
+#% type: string
+#% multiple: no
+#% required: no
+#% description: Location name (not location path):
+#%guisection: Mapset
+#%end
+
+#%option G_OPT_M_DIR
+#% key: dbase
+#% multiple: no
+#% required: no
+#% description: GRASS GIS database directory:
+#%guisection: Mapset
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
-#% description: Print raster data to be imported and exit
+#% description: Print the detected files and exit
 #% guisection: Optional
 #%end
 """
@@ -78,37 +111,37 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    pass
+    raise ImportError("You must installed GRASS GIS to run this program.")
 
 try:
     from osgeo import gdal, osr
 except ImportError as e:
     gs.fatal(_("Flag -r requires GDAL library: {}").format(e))
 
+    raise ImportError("You must installed GRASS GIS to run this program.")
+
 
 class S1Import(object):
-    def __init__(self, dir, pattern=None, extension=None):
+    def __init__(self, input_dir, pattern=None, extension=None):
         """
         Import pre-processed (pr.geocode) Sentinel 1 data into a mapset.
 
         Parameters
         ----------
-        dir : str
+        input_dir : str
             Directory where the scenes are.
-        mapname : str
-            Mapname where the scenes where imported.
-        pattern : str
+        pattern : str or None, optional
             A pattern of filename which will be imported.
-        extension : {'ENVI', 'GEOTIFF'}
+        extension : {'ENVI', 'GEOTIFF'}, optional
             Which extensions should be recognized?
         """
         # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 
-        if not os.path.exists(dir):
-            gs.fatal(_('Input directory <{0}> not exists').format(dir))
+        if not os.path.exists(input_dir):
+            gs.fatal(_('Input directory <{0}> not exists').format(input_dir))
         else:
-            self.dir = dir
+            self.dir = input_dir
 
         # Create Pattern and find files --------------------------------------------------------------------------------
         if extension is not None:
@@ -153,11 +186,12 @@ class S1Import(object):
 
                 self.__import_file(f, module, args)
 
+    def create_mapset(self, mapset, dbase=None, location=None):
+        module = 'g.c.mapset'
+        gs.run_command(module, mapset=mapset, dbase=dbase, location=location)
+
     def print_products(self):
         for f in self.files:
-            # print self.__check_projection(f)
-            # print self.__raster_epsg(f)
-
             sys.stdout.write(
                 'Detected File <{0}> {1} (EPSG: {2}){3}'.format(str(f), '1' if self.__check_projection(f) else '0',
                                                                 str(self.__raster_epsg(f)), os.linesep))
@@ -212,11 +246,8 @@ class S1Import(object):
 
         return ret
 
-    def __import_file(self, filename, module, args, mapname=None):
-        if mapname is None:
-            mapname = os.path.splitext(os.path.basename(filename))[0]
-        else:
-            pass
+    def __import_file(self, filename, module, args):
+        mapname = os.path.splitext(os.path.basename(filename))[0]
 
         gs.message(_('Processing <{}>...').format(mapname))
 
@@ -231,21 +262,32 @@ class S1Import(object):
             pass
 
 
+def change_dict_value(dictionary, old_value, new_value):
+    for key, value in dictionary.items():
+        if value == old_value:
+            dictionary[key] = new_value
+
+    return dictionary
+
+
 def main():
-    if options['pattern'] == '':
-        pattern = None
-    else:
-        pattern = options['pattern']
+    options, flags = gs.parser()
 
-    if options['extension'] == 'ENVI':
-        extension = '.img'
-    else:
-        extension = '.tif*'
+    options = change_dict_value(options, '', None)
+    options = change_dict_value(options, 'ENVI', '.img')
+    options = change_dict_value(options, 'GEOTIFF', '.tif*')
 
-    importer = S1Import(options['input'], pattern=pattern, extension=extension)
+    importer = S1Import(options['input_dir'], pattern=options['pattern'], extension=options['extension'])
 
     if flags['p']:
         importer.print_products()
+        return 0
+
+    if flags['c']:
+        if options['mapset'] == '':
+            raise ValueError("Please define a mapset.")
+        else:
+            importer.create_mapset(mapset=options['mapset'], dbase=options['dbase'], location=options['location'])
 
     importer.import_products(flags['r'], flags['l'])
 
@@ -253,5 +295,4 @@ def main():
 
 
 if __name__ == "__main__":
-    options, flags = gs.parser()
     sys.exit(main())

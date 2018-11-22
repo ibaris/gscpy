@@ -4,7 +4,7 @@
 #
 # MODULE:       g.database
 # AUTHOR(S):    Ismail Baris
-# PURPOSE:      Create a GRASS GIS Database AND a Mapset.
+# PURPOSE:      Create a GRASS GIS Database.
 #
 # COPYRIGHT:    (C) Ismail Baris and Nils von Norsinski
 #
@@ -32,11 +32,11 @@
 #%end
 
 #%option
-#% key: mapset
+#% key: db_name
 #% type: string
 #% multiple: no
 #% required: yes
-#% description: Name of the desired mapset:
+#% description: Name of the desired database:
 #%guisection: Input
 #%end
 
@@ -73,24 +73,24 @@ import sys
 try:
     import grass.script as gs
 except ImportError:
-    pass
+    raise ImportError("You must installed GRASS GIS to run this program.")
 
 class Database(object):
-    def __init__(self, dir, mapset, t_srs=None, t_srs_from_file=None, launch=False):
+    def __init__(self, db_dir, db_name, t_srs=None, t_srs_from_file=None, launch=False):
         """
-        Create a GRASS GIS Database and a Mapset.
+        Create a GRASS GIS Database.
 
         Parameters
         ----------
-        dir : str
-            Directory where the scenes are.
-        mapname : str
-            Mapname where the scenes where imported.
+        db_dir : str
+            Location of GRASS GIS database
+        db_name : str
+            Name of the database.
         t_srs : int, optional
             A EPSG Code for georeferencing.
-        t_srs_from_file : str
+        t_srs_from_file : str, optional
             If t_srs is not used, a georeferenced file can be here uploaded.
-        launch : bool
+        launch : bool, optional
             If True, GRASS GIS will start with the new created mapset.
         """
 
@@ -121,11 +121,8 @@ class Database(object):
                 self.t_srs_from_file = None
 
         # Check Input Directory ----------------------------------------------------------------------------------------
-        if not os.path.exists(dir):
-            raise ValueError("Path <{0}> does not exist").format(dir)
-        else:
-            self.mapset = mapset
-            self.dir = os.path.join(dir, self.mapset)
+        self.db_name = db_name
+        self.dir = os.path.join(db_dir, self.db_name)
 
         # Self Definitions ---------------------------------------------------------------------------------------------
         self.launch = launch
@@ -152,7 +149,7 @@ class Database(object):
             else:
                 break
 
-        print("Mapset <{0}> created in database <{1}>".format(self.mapset, self.dir))
+        print("Database <{0}> created in database <{1}>".format(self.db_name, self.dir))
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
@@ -168,7 +165,7 @@ class Database(object):
 
         else:
             if self.launch:
-                startcmd = [grass_version, '-e', '-c', self.t_srs_from_file, self.dir]
+                startcmd = [grass_version, '-c', self.t_srs_from_file, self.dir]
             else:
                 startcmd = [grass_version, '-e', '-c', self.t_srs_from_file, self.dir]
 
@@ -191,7 +188,7 @@ def main():
     else:
         launch = False
 
-    creator = Database(dir=options['db_dir'], mapset=options['mapset'], t_srs_from_file=t_srs_file, t_srs=t_srs,
+    creator = Database(dir=options['db_dir'], db_name=options['db_name'], t_srs_from_file=t_srs_file, t_srs=t_srs,
                        launch=launch)
 
     creator.create_database()

@@ -135,7 +135,8 @@ class Grassify(object):
             if not os.path.exists(new_name) or replace:
                 shutil.copy(old_name, new_name)
             elif not replace and os.path.exists(new_name):
-                gs.fatal(_('Script <{0}> exists. Try to set the replace flag').format(base))
+                pass
+                # gs.fatal(_('Script <{0}> exists. Try to set the replace flag').format(base))
 
         return 0
 
