@@ -4,7 +4,7 @@
 #
 # MODULE:       g.database
 # AUTHOR(S):    Ismail Baris
-# PURPOSE:      Create a GRASS GIS Database.
+# PURPOSE:      Create a mapset in aGRASS GIS Database.
 #
 # COPYRIGHT:    (C) Ismail Baris and Nils von Norsinski
 #
@@ -16,7 +16,7 @@
 
 """
 #%module
-#% description: Create a GRASS GIS Database.
+#% description: Create a mapset in aGRASS GIS Database.
 #% keyword: auxiliary
 #% keyword: database
 #% keyword: create
@@ -91,9 +91,7 @@ class Mapset(object):
     # ------------------------------------------------------------------------------------------------------------------
     def __run_command(self, flag='c'):
         module = 'g.mapset'
-        args = {}
-
-        args['mapset'] = self.mapset
+        args = {'mapset': self.mapset}
 
         if self.dbase is not None:
             args['dbase'] = self.dbase
