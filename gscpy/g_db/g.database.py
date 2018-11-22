@@ -75,10 +75,14 @@ try:
 except ImportError:
     raise ImportError("You must installed GRASS GIS to run this program.")
 
+
 class Database(object):
     def __init__(self, db_dir, db_name, t_srs=None, t_srs_from_file=None, launch=False):
         """
         Create a GRASS GIS Database.
+
+        Create a new location, including it's default PERMANENT mapset, with or
+        without entering the new location.
 
         Parameters
         ----------
@@ -87,11 +91,51 @@ class Database(object):
         db_name : str
             Name of the database.
         t_srs : int, optional
-            A EPSG Code for georeferencing.
+            A EPSG Code for georeferencing purposes.
         t_srs_from_file : str, optional
             If t_srs is not used, a georeferenced file can be here uploaded.
         launch : bool, optional
             If True, GRASS GIS will start with the new created mapset.
+
+        Attributes
+        ----------
+        db_dir : str
+        db_name : str
+        t_srs : str or NoneType
+        t_srs_from_file : str or NoneType
+        launch : bool
+
+        Methods
+        -------
+        create_database()
+            Create a GRASS GIS Database.
+
+        Examples
+        --------
+         The general usage is::
+            $ g.database [-l] db_dir=string db_name=string [t_srs=integer] [t_srs_from_file=string] [--verbose] [--quiet]
+
+        Create a new location, including it's default PERMANENT mapset, without entering the new location using
+        a EPSG code::
+            $ g.database db_dir=/home/user/grassdata db_name=germany t_srs=32630
+
+        Create a new location, including it's default PERMANENT mapset, without entering the new location using
+        a georeferenced raster file::
+            $ g.database db_dir=/home/user/grassdata db_name=germany t_srs_from_file=myFile.tiff
+
+
+        Create new mapset within the new location and launch GRASS GIS within that mapset::
+            $ g.database -l db_dir=/home/user/grassdata db_name=germany t_srs=32630
+
+        Notes
+        -----
+        It is mandatory that t_srs OR t_srs_from_file is set.
+
+        This class try to find ['grass70', 'grass71', 'grass72', 'grass73', 'grass74'] commands. The list can be
+        easily expand to another versions of GRASS GIS.
+
+        Flags:
+            * l : Launch mapset with GRASS GIS.
         """
 
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------
@@ -131,6 +175,13 @@ class Database(object):
     # Public Methods
     # ------------------------------------------------------------------------------------------------------------------
     def create_database(self):
+        """
+        Create a GRASS GIS Database.
+
+        Returns
+        -------
+        None
+        """
         for grass_version in self.candidates:
             try:
                 startcmd = self.__build_start_command(grass_version)
@@ -172,24 +223,34 @@ class Database(object):
         return startcmd
 
 
+def change_dict_value(dictionary, old_value, new_value):
+    """
+    Change a certain value from a dictionary.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    old_value : str, NoneType, bool
+        The value to be changed.
+    new_value : str, NoneType, bool
+        Replace value.
+
+    Returns
+    -------
+    dict
+    """
+    for key, value in dictionary.items():
+        if value == old_value:
+            dictionary[key] = new_value
+
+    return dictionary
+
+
 def main():
-    if options['t_srs_file'] == '':
-        t_srs_file = None
-    else:
-        t_srs_file = options['t_srs_file']
-
-    if options['t_srs'] == '':
-        t_srs = None
-    else:
-        t_srs = options['t_srs']
-
-    if flags['l']:
-        launch = True
-    else:
-        launch = False
-
-    creator = Database(dir=options['db_dir'], db_name=options['db_name'], t_srs_from_file=t_srs_file, t_srs=t_srs,
-                       launch=launch)
+    creator = Database(db_dir=options['db_dir'], db_name=options['db_name'],
+                       t_srs_from_file=options['t_srs_from_file'], t_srs=options['t_srs'],
+                       launch=flags['l'])
 
     creator.create_database()
 
@@ -198,4 +259,6 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
+    options = change_dict_value(options, '', None)
+
     sys.exit(main())

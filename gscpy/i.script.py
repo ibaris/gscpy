@@ -24,15 +24,15 @@
 
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
-#% key: input
-#% description: Directory of python files:
+#% key: input_dir
+#% description: Directory of python files.
 #% required: yes
 #%guisection: Input
 #%end
 
 #%option G_OPT_M_DIR
 #% key: export
-#% description: Script directory of GRASS GIS (for Linux it can be detect automatically):
+#% description: Script directory of GRASS GIS (automatically in Linux systems).
 #% required: no
 #%guisection: Input
 #%end
@@ -40,26 +40,26 @@
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
-#% description: File name pattern to import:
+#% description: The pattern of file names.
 #% guisection: Filter
 #%end
 
 #%option
 #% key: exclusion
-#% description: Which files or pattern should be excluded?:
+#% description: Which files or pattern should be excluded?.
 #% guisection: Filter
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
-#% description: Print python data to be imported and exit
+#% description: Print python data to be imported and exit.
 #% guisection: Optional
 #%end
 
 #%flag
 #% key: r
-#% description: Replace script
+#% description: Replace script.
 #% guisection: Optional
 #%end
 """
@@ -75,8 +75,64 @@ except ImportError:
 
 
 class Grassify(object):
-    def __init__(self, dir, export_path=None, pattern=None, exclusion=None):
+    def __init__(self, input_dir, export_path=None, pattern=None, exclusion=None):
+        """
+        Import Scripts from a package to GRASS GIS.
 
+        This class will copy any suitable python file like 'i.dr.import.py' into the GRASS script folder without
+        the '.py' extension. This class will exclude such files like '__init__.py' or 'setup.py'. For more exclusions
+        the parameter `exclusion` can be used.
+
+        Parameters
+        ----------
+        input_dir : str
+            Directory of python files
+        export_path : str, optional
+            Script directory of GRASS GIS (automatically in Linux systems).
+        pattern : str, optional
+            The pattern of file names.
+        exclusion : str
+             Which files or pattern should be excluded?.
+
+        Attributes
+        ----------
+        extension : list
+            A list which contains all supported GRASS GIS candidates.
+        exclusion : str
+        import_path : str
+            Dir parameter.
+        export_path : str
+        filter_p : str
+            Combines pattern and extension.
+        files : list
+            All detected files.
+
+        Methods
+        -------
+        copy(replace=False)
+            Copy files.
+        print_products()
+            Print all detected files.
+
+        Examples
+        --------
+        The general usage is::
+            $ i.script [-r] input_dir=string [pattern=string] [exclusion=string] [export_path=string] [--verbose] [--quiet]
+
+
+        Import all suitable python files from a directory into the GRASS script folder::
+            $ i.script input_dir=/home/user/package
+
+
+        Import all suitable python files from a directory into the GRASS script folder and exclude all files that
+        include the string 'test'::
+            $ i.script input_dir=/home/user/package exclude=test.*
+
+        Notes
+        -----
+        Flags:
+            * r : Overwrite file if it is existent (be careful padawan!)
+        """
         # Self Definitions ---------------------------------------------------------------------------------------------
         self.extension = '.py'
 
@@ -87,10 +143,10 @@ class Grassify(object):
             self.exclusion = exclusion
 
         # Initialize Directory -----------------------------------------------------------------------------------------
-        if not os.path.exists(dir):
-            gs.fatal(_('Input directory <{0}> not exists').format(dir))
+        if not os.path.exists(input_dir):
+            gs.fatal(_('Input directory <{0}> not exists').format(input_dir))
         else:
-            self.import_path = dir
+            self.import_path = input_dir
 
         # < Try to find the script directory of GRASS GIS > ------------
         if export_path is None:
@@ -186,7 +242,7 @@ def main():
     else:
         export = options['export']
 
-    grassify = Grassify(options['input'], export_path=export, pattern=pattern, exclusion=exclusion)
+    grassify = Grassify(options['input_dir'], export_path=export, pattern=pattern, exclusion=exclusion)
 
     if flags['p']:
         grassify.print_products()

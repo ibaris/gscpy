@@ -24,9 +24,17 @@
 
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
-#% key: dir
+#% key: input_dir
 #% multiple: no
-#% description: Name for input directory where the processed data is:
+#% description: The directory where the files are located.
+#%guisection: Input
+#%end
+
+#%option G_OPT_F_INPUT
+#% key: t_srs_file
+#% multiple: no
+#% required: no
+#% description: Using a georeferenced raster or vector file:
 #%guisection: Input
 #%end
 
@@ -34,14 +42,25 @@
 #% key: t_srs
 #% required: no
 #% multiple: no
-#% description: A target geographic reference system in EPSG, (Default is 4326):
+#% description: A target geographic reference system in EPSG:
 #%guisection: Input
+#%end
+
+#%option
+#% key: geocoding_type
+#% type: string
+#% required: no
+#% multiple: no
+#% answer: Range-Doppler
+#% options: Range-Doppler, Cross-Correlation
+#% description: The type of geocoding applied:
+#% guisection: Input
 #%end
 
 # Output Section -------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
 #% key: outdir
-#% required: no
+#% required: yes
 #% multiple: no
 #% description: The directory to write the final files to:
 #%guisection: Output
@@ -67,17 +86,6 @@
 #% guisection: Output
 #%end
 
-#%option
-#% key: geocoding_type
-#% type: string
-#% required: no
-#% multiple: no
-#% answer: Range-Doppler
-#% options: Range-Doppler, Cross-Correlation
-#% description: The type of geocoding applied:
-#% guisection: Output
-#%end
-
 # Subset Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: offset
@@ -99,7 +107,7 @@
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
-#% description: File name pattern to import
+#% description: The pattern of file names.
 #% guisection: Filter
 #%end
 
@@ -137,37 +145,35 @@
 #%end
 
 # Auto Import Section --------------------------------------------------------------------------------------------------
-#%option G_OPT_M_DIR
-#% key: input_dir
-#% required: no
-#% description: Directory where the scenes are:
-#%guisection: Import
-#%end
-
-#%option
-#% key: pattern
-#% description: File name pattern to import:
+#%flag
+#% key: i
+#% description: Import processed files in a mapset.
 #% guisection: Import
 #%end
 
-# Settings Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: r
-#% description: Reproject raster data using r.import if needed
-#% guisection: Settings
+#% description: Reproject raster data (using r.import if needed).
+#% guisection: Import
 #%end
 
 #%flag
 #% key: l
-#% description: Link raster data instead of importing
-#% guisection: Settings
+#% description: Link raster data instead of importing.
+#% guisection: Import
+#%end
+
+#%option
+#% key: pattern
+#% description: The pattern of file names.
+#% guisection: Import
 #%end
 
 # Mapset Section -------------------------------------------------------------------------------------------------------
 #%flag
 #% key: c
-#% description: Create a new mapset
-#% guisection: Optional
+#% description: Create a new mapset.
+#% guisection: Mapset
 #%end
 
 #%option
@@ -175,7 +181,7 @@
 #% required: no
 #% type: string
 #% multiple: no
-#% description: Name of mapset:
+#% description: Name of mapset.
 #%guisection: Mapset
 #%end
 
@@ -184,22 +190,22 @@
 #% type: string
 #% multiple: no
 #% required: no
-#% description: Location name (not location path):
+#% description: Location name (not location path).
 #%guisection: Mapset
 #%end
 
-#%option G_OPT_F_INPUT
+#%option G_OPT_M_DIR
 #% key: dbase
 #% multiple: no
 #% required: no
-#% description: GRASS GIS database directory:
+#% description: GRASS GIS database directory.
 #%guisection: Mapset
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
-#% description: Print raster data to be imported and exit
+#% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
 
@@ -229,19 +235,25 @@ try:
 except ImportError:
     raise ImportError("You must installed GRASS GIS to run this program.")
 
+try:
+    from osgeo import gdal, osr
+except ImportError as e:
+    gs.fatal(_("Parameter t_srs_from_file requires GDAL library: {}").format(e))
+
+    raise ImportError("You must installed GRASS GIS to run this program.")
+
 
 class Geocode(object):
-    def __init__(self, dir, outdir, pattern=None, t_srs=4326, resolution_value=20, polarizations='all', shapefile=None,
-                 scaling='dB',
-                 geocoding_type='Range-Doppler', removeS1BoderNoise=True, offset=None, external_dem_file=None,
-                 external_dem_nan=None, externalDEMApplyEGM=True, basename_extensions=None, test=False,
-                 verbose=False):
+    def __init__(self, input_dir, outdir, pattern=None, t_srs=None, t_srs_from_file=None, resolution_value=20,
+                 polarizations='all', shapefile=None, scaling='dB', geocoding_type='Range-Doppler',
+                 removeS1BoderNoise=True, offset=None, external_dem_file=None, external_dem_nan=None,
+                 externalDEMApplyEGM=True, basename_extensions=None, test=False, verbose=False):
         """
         Wrapper function for geocoding SAR images using pyroSAR.
 
         Parameters
         ----------
-        dir: str
+        input_dir: str
             Directory where the Sentinel-Data is.
         outdir: str
             The directory to write the final files to.
@@ -277,6 +289,35 @@ class Geocode(object):
         test: bool, optional
             If set to True the workflow xml file is only written and not executed. Default is False.
 
+        Attributes
+        ----------
+        files : list
+            All detected files.
+
+        Methods
+        -------
+        geocode()
+            Start the geocoding process.
+        import_products(pattern=None, mapset=None, dbase=None, location=None, flags=None)
+            Import detected files.
+        print_products()
+            Print all detected files.
+
+        Examples
+        --------
+        The general usage is::
+            $ pr.geocode [-e -i -r -l -c -p -t -b] input_dir=string outdir=string [pattern=string] [t_srs=string] [t_srs_from_file=string]
+                [resolution_value=integer] [polarizations=string] [shapefile=string] [scaling=string]
+                [geocoding_type=string] [offset=string] [external_dem_file=string] [external_dem_nan=integer]
+                [basename_extensions=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
+
+
+        Import Sentinel 1A files geocode and import them in current mapset and reproject it::
+            $ pr.geocode -r input_dir=/home/user/data outdir=/home/user/data/processed t_srs=43265
+
+        Import Sentinel 1A files geocode and import them in a new mapset within another GRASS GIS database::
+            $ pr.geocode -r input_dir=/home/user/data outdir=/home/user/data/processed t_srs=43265 mapset=Goettingen dbase=/home/user/grassdata/germany
+
         Note
         ----
         If only one polarization is selected the results are directly written to GeoTiff.
@@ -285,20 +326,58 @@ class Geocode(object):
         If GeoTiff would directly be selected as output format for multiple polarizations then a multilayer GeoTiff
         is written by SNAP which is considered an unfavorable format
 
+        Notes
+        -----
+        Flags :
+            * e : Apply Earth Gravitational Model to external DEM.
+            * i : Import processed files in a mapset.
+            * r : Reproject raster data (using r.import if needed).
+            * l : Link raster data instead of importing.
+            * c : Create a new mapset.
+            * p : Print the detected files and exit.
+            * t : Write only the workflow in xml file
+            * b : Enables removal of S1 GRD border noise.
+
         See Also
         --------
         :class:`pyroSAR.drivers.ID`,
         :class:`spatialist.vector.Vector`,
         :func:`spatialist.auxil.crsConvert()`
+
+
         """
+
+        # Check Georeference -------------------------------------------------------------------------------------------
+        if t_srs is None and t_srs_from_file is None:
+            raise ValueError("A EPSG code (t_srs) or a geocoded file (t_srs_from_file) must be defined.")
+
+        elif t_srs is not None and t_srs_from_file is not None:
+            raise ValueError("Parameter t_srs AND A t_srs_from_file are defined. EPSG code OR a geocoded "
+                             "file must be defined.")
+        else:
+            if t_srs is not None:
+                self.t_srs = int(t_srs)
+            else:
+                self.t_srs = None
+
+            if t_srs_from_file is not None:
+                if not os.path.exists(t_srs_from_file):
+                    raise ValueError("File <{0}> does not exist".format(t_srs_from_file))
+
+                else:
+                    self.t_srs_from_file = t_srs_from_file
+                    self.t_srs = self.__raster_epsg(self.t_srs_from_file)
+
+            else:
+                self.t_srs_from_file = None
 
         # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 
-        if not os.path.exists(dir):
-            gs.fatal(_('Input directory <{}> not exists').format(dir))
+        if not os.path.exists(input_dir):
+            gs.fatal(_('Input directory <{}> not exists').format(input_dir))
         else:
-            self.dir = dir
+            self.input_dir = input_dir
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)
@@ -362,24 +441,26 @@ class Geocode(object):
 
     def import_products(self, pattern=None, mapset=None, dbase=None, location=None, flags=None):
         """
-        Import the processed data into a mapset.
+        Import all detected files in a mapset.
 
         Parameters
         ----------
-        pattern : str
-        f : bool
-        l : bool
-            Link raster data instead of importing.
-        p : bool
-            Print raster data to be imported and exit.
+        pattern : str, optional
+            The pattern of file names. If not specified all files with selected extension will be imported.
+        mapset : str, optional
+            Name of mapset.
+        dbase : str, optional
+            Location of GRASS GIS database
+        mapset : str, optional
+            Name of the mapset that will be created.
+        flags : str
+            Available flags are '-c-r-l'
 
         Returns
         -------
         None
         """
-        args = {}
-        args['input'] = self.outdir
-        args['extension'] = 'GEOTIFF'
+        args = {'input': self.outdir, 'extension': 'GEOTIFF'}
 
         if pattern:
             args['pattern'] = pattern
@@ -406,7 +487,7 @@ class Geocode(object):
         else:
             flags = ''
 
-        module = 'i.s1.import'
+        module = 'i.dr.import'
 
         try:
             gs.run_command(module, flags=flags, input_dir=self.outdir, **args)
@@ -415,6 +496,13 @@ class Geocode(object):
             pass
 
     def print_products(self):
+        """
+        Print all detected files.
+
+        Returns
+        -------
+        None
+        """
         for f in self.files:
             sys.stdout.write('Detected File <{0}> {1}'.format(str(f), os.linesep))
 
@@ -424,7 +512,7 @@ class Geocode(object):
     def __filter(self, filter_p):
         pattern = re.compile(filter_p)
         files = []
-        for rec in os.walk(self.dir):
+        for rec in os.walk(self.input_dir):
             if not rec[-1]:
                 continue
 
@@ -438,80 +526,70 @@ class Geocode(object):
 
         return files
 
+    def __raster_epsg(self, filename):
+        dsn = gdal.Open(filename)
+
+        srs = osr.SpatialReference()
+        srs.ImportFromWkt(dsn.GetProjectionRef())
+
+        ret = srs.GetAuthorityCode(None)
+        dsn = None
+
+        return ret
+
+
+def change_dict_value(dictionary, old_value, new_value):
+    """
+    Change a certain value from a dictionary.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    old_value : str, NoneType, bool
+        The value to be changed.
+    new_value : str, NoneType, bool
+        Replace value.
+
+    Returns
+    -------
+    dict
+    """
+    for key, value in dictionary.items():
+        if value == old_value:
+            dictionary[key] = new_value
+
+    return dictionary
+
 
 def main():
-    dir = options['dir']
-    outdir = options['outdir']
-    shapefile = options['shapefile']
-    t_srs = options['t_srs']
-    resolution_value = options['resolution_value']
-    scaling = options['scaling']
-    geocoding_type = options['geocoding_type']
-    polarizations = options['polarizations']
-    offset = options['offset']
-    external_dem_file = options['external_dem_file']
-    external_dem_nan = options['external_dem_nan']
+    if options['resolution_value'] is None:
+        options['resolution_value'] = 20
 
-    if options['pattern'] == '':
-        pattern = None
-    else:
-        pattern = options['pattern']
+    if options['geocoding_type'] is 'Cross-Correlation':
+        options['geocoding_type'] = 'SAR simulation cross correlation'
 
-    if shapefile is '':
-        shapefile = None
+    if options['polarizations'] is None:
+        options['polarizations'] = 'all'
 
-    if outdir is '':
-        outdir = os.path.join(os.path.dirname(dir), 'results')
-
-    if t_srs is '':
-        t_srs = 4326
-    else:
-        t_srs = int(t_srs)
-
-    if resolution_value is '':
-        resolution_value = 20
-
-    if geocoding_type is 'Cross-Correlation':
-        geocoding_type = 'SAR simulation cross correlation'
-
-    if polarizations is 'all':
-        pass
-    elif polarizations is '':
-        polarizations = 'all'
-    else:
-        polarizations = [polarizations]
-
-    if offset is '':
-        offset = None
-    else:
-        offset_list = offset.split(',')
+    if options['offset'] is not None:
+        offset_list = options['offset'].split(',')
         offset_list = [int(item) for item in offset_list]
-        offset = tuple(offset_list)
+        options['offset'] = tuple(offset_list)
 
-    if external_dem_file is '':
-        external_dem_file = None
-
-    if external_dem_nan is '':
-        external_dem_nan = None
-    else:
-        external_dem_nan = int(external_dem_nan)
-
-    pp_geocode = Geocode(dir=dir, outdir=outdir, pattern=pattern, t_srs=t_srs, resolution_value=resolution_value,
-                         polarizations=polarizations,
-                         shapefile=shapefile, scaling=scaling, geocoding_type=geocoding_type,
-                         removeS1BoderNoise=flags['b'], offset=offset, external_dem_file=external_dem_file,
-                         external_dem_nan=external_dem_nan, externalDEMApplyEGM=flags['e'],
-                         test=flags['t'])
+    pp_geocode = Geocode(input_dir=options['input_dir'], outdir=options['outdir'], pattern=options['pattern'],
+                         t_srs=options['t_srs'], resolution_value=options['resolution_value'],
+                         polarizations=options['polarizations'], shapefile=options['shapefile'],
+                         scaling=options['scaling'], geocoding_type=options['geocoding_type'],
+                         removeS1BoderNoise=flags['b'], offset=options['offset'],
+                         external_dem_file=options['external_dem_file'], external_dem_nan=options['external_dem_nan'],
+                         externalDEMApplyEGM=flags['e'], test=flags['t'])
 
     if flags['p']:
         pp_geocode.print_products()
         return 0
 
     pp_geocode.geocode()
-
-    if flags['i']:
-        pp_geocode.import_products(pattern=options['pattern'], f=flags['f'], l=flags['l'],
-                                   p=flags['p'])
 
     if flags['i']:
         pattern = options['pattern']
@@ -524,7 +602,7 @@ def main():
 
         for item in flag_list:
             if flags[item]:
-                flag += item
+                flag += '-' + item
             else:
                 pass
 
@@ -535,4 +613,6 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
+    options = change_dict_value(options, '', None)
+
     sys.exit(main())

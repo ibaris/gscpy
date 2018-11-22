@@ -2,9 +2,9 @@
 
 ############################################################################
 #
-# MODULE:      i.s1.import
+# MODULE:      i.fr.import
 # AUTHOR(S):   Ismail Baris
-# PURPOSE:     Import pyroSAR datasets in a directory based on their metadata
+# PURPOSE:     Import pyroSAR dataset in a directory based on their metadata.
 #
 # COPYRIGHT:   (C) Ismail Baris and Nils von Norsinski
 #
@@ -26,7 +26,7 @@
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
 #% key: input_dir
-#% description: Directory where the scenes are:
+#% description: The directory where the files are located.
 #% required: yes
 #%guisection: Input
 #%end
@@ -37,34 +37,7 @@
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Sensor:
-#% guisection: Filter
-#%end
-
-#%option
-#% key: projection
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Projection:
-#% guisection: Filter
-#%end
-
-#%option
-#% key: orbit
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Orbit:
-#% guisection: Filter
-#%end
-
-#%option
-#% key: polarization
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Polarization:
+#% description: Sensor.
 #% guisection: Filter
 #%end
 
@@ -73,25 +46,16 @@
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Acquisition Mode:
+#% description: Acquisition Mode.
 #% guisection: Filter
 #%end
 
 #%option
-#% key: start
+#% key: polarization
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Start:
-#% guisection: Filter
-#%end
-
-#%option
-#% key: stop
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Stop:
+#% description: Polarization.
 #% guisection: Filter
 #%end
 
@@ -100,7 +64,34 @@
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Product:
+#% description: Product.
+#% guisection: Filter
+#%end
+
+#%option
+#% key: product
+#% required: no
+#% type: string
+#% multiple: yes
+#% description: Product.
+#% guisection: Filter
+#%end
+
+#%option
+#% key: projection
+#% required: no
+#% type: string
+#% multiple: yes
+#% description: Projection.
+#% guisection: Filter
+#%end
+
+#%option
+#% key: orbit
+#% required: no
+#% type: string
+#% multiple: yes
+#% description: Orbit.
 #% guisection: Filter
 #%end
 
@@ -109,7 +100,7 @@
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Spacing:
+#% description: Spacing.
 #% guisection: Filter
 #%end
 
@@ -118,7 +109,7 @@
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Sample:
+#% description: Sample.
 #% guisection: Filter
 #%end
 
@@ -127,27 +118,27 @@
 #% required: no
 #% type: string
 #% multiple: yes
-#% description: Lines:
+#% description: Lines.
 #% guisection: Filter
 #%end
 
 # Settings Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: r
-#% description: Reproject raster data using r.import if needed
+#% description: Reproject raster data (using r.import if needed).
 #% guisection: Settings
 #%end
 
 #%flag
 #% key: l
-#% description: Link raster data instead of importing
+#% description: Link raster data instead of importing.
 #% guisection: Settings
 #%end
 
 # Mapset Section -------------------------------------------------------------------------------------------------------
 #%flag
 #% key: c
-#% description: Create a new mapset
+#% description: Create a new mapset.
 #% guisection: Mapset
 #%end
 
@@ -156,7 +147,7 @@
 #% required: no
 #% type: string
 #% multiple: no
-#% description: Name of mapset:
+#% description: Name of mapset.
 #%guisection: Mapset
 #%end
 
@@ -165,7 +156,7 @@
 #% type: string
 #% multiple: no
 #% required: no
-#% description: Location name (not location path):
+#% description: Location name (not location path).
 #%guisection: Mapset
 #%end
 
@@ -173,7 +164,7 @@
 #% key: dbase
 #% multiple: no
 #% required: no
-#% description: GRASS GIS database directory:
+#% description: GRASS GIS database directory.
 #%guisection: Mapset
 #%end
 
@@ -186,7 +177,7 @@
 
 #%flag
 #% key: p
-#% description: Print raster data to be imported and exit
+#% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
 """
@@ -213,18 +204,88 @@ __LOCAL__ = ['sensor', 'projection', 'orbit', 'polarizations', 'acquisition_mode
              'start', 'stop', 'product', 'spacing', 'samples', 'lines']
 
 
-class Finder(object):
+class FinderImport(object):
     def __init__(self, input_dir, recursive=False, sensor=None, projection=None, orbit=None, polarization=None,
                  acquisition_mode=None, start=None, stop=None, product=None, spacing=None, sample=None,
                  lines=None):
 
         """
-        Import pre-processed (pr.geocode) Sentinel 1 data into a mapset.
+        Import pyroSAR dataset in a directory based on their metadata.
 
         Parameters
         ----------
-        input_list : str
-            A list with paths to files.
+        input_dir : str
+            The directory where the files are located.
+        recursive : bool, optional
+            Recursive search. Default is False.
+        sensor : str or tuple, optional
+            Sensor.
+        projection : str or tuple, optional
+            Projection.
+        orbit : str or tuple, optional
+            Orbit.
+        polarization : str or tuple, optional
+            Polarization.
+        acquisition_mode : str or tuple, optional
+            Acquisition_mode.
+        start : str or tuple, optional
+            Start.
+        stop : str or tuple, optional
+            Stop.
+        product : str or tuple, optional
+            Product.
+        spacing : str or tuple, optional
+            Spacing.
+        sample : str or tuple, optional
+            Sample.
+        lines : str or tuple, optional
+            Lines.
+
+        Attributes
+        ----------
+        input_dir : str
+        recursive : bool
+        kwargs : dict
+            Selected attributs (sensor, polarization etc.) in a dictionary.
+        files : list
+            All detected files.
+
+        Methods
+        -------
+        find_products()
+            Find all files that matches the input attributes.
+        import_products(reproject=False, link=False)
+            Import detected files.
+        create_mapset(mapset, dbase=None, location=None)
+            Create a new mapset.
+        print_products()
+            Print all detected files.
+
+        Examples
+        --------
+        The general usage is::
+            $ i.fr.import [-r -l -c -p -e] input_dir=string [*attributes=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
+
+        For *attributes the following parameters can be used::
+            >>> ['sensor', 'projection', 'orbit', 'polarizations', 'acquisition_mode', 'start', 'stop', 'product', 'spacing', 'samples', 'lines']
+
+
+        Import Sentinel 1A files with polarization VV and VH from a directory in current mapset and reproject it::
+            $ i.fr.import -r input_dir=/home/user/data sensor=SA1 polarization=VV, VH
+
+
+        Import Sentinel 1A and 1B files with polarization VV from a directory in a new mapset and reproject it::
+            $ i.fr.import -c -r input_dir=/home/user/data sensor=S1A, S1B polarization=VV mapset=Goettingen
+
+        Notes
+        -----
+        Flags:
+            * r : Reproject raster data (using r.import if needed).
+            * l : Link raster data instead of importing.
+            * c : Create a new mapset.
+            * p : Print the detected files and exit.
+            * e : Recursive search.
+
         """
         # Initialize Directory -----------------------------------------------------------------------------------------
         self.input_dir = input_dir
@@ -246,9 +307,29 @@ class Finder(object):
     # Public Methods
     # ------------------------------------------------------------------------------------------------------------------
     def find_products(self):
+        """
+        Find all files that matches the input attributes.
+        Returns
+        -------
+        list
+        """
         return find_datasets(self.input_dir, self.recursive, **self.kwargs)
 
     def import_products(self, reproject=False, link=False):
+        """
+        Import detected files.
+
+        Parameters
+        ----------
+        reproject : bool
+            Reproject raster data (using r.import if needed).
+        link : bool
+            Link raster data instead of importing.
+
+        Returns
+        -------
+        None
+        """
         args = {}
         if link:
             module = 'r.external'
@@ -272,10 +353,33 @@ class Finder(object):
                     self.__import_file(f, module, args)
 
     def create_mapset(self, mapset, dbase=None, location=None):
+        """
+        Create a new mapset calling the module `g.c.mapset`.
+
+        Parameters
+        ----------
+        mapset : str
+            Name of mapset.
+        dbase : str, optional
+            Location of GRASS GIS database
+        mapset : str, optional
+            Name of the mapset that will be created.
+
+        Returns
+        -------
+        None
+        """
         module = 'g.mapset'
         gs.run_command(module, mapset=mapset, dbase=dbase, location=location)
 
     def print_products(self):
+        """
+        Print all detected files.
+
+        Returns
+        -------
+        None
+        """
         for f in self.files:
             sys.stdout.write(
                 'Detected File <{0}> {1} (EPSG: {2}){3}'.format(str(f), '1' if self.__check_projection(f) else '0',
@@ -284,7 +388,6 @@ class Finder(object):
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
     # ------------------------------------------------------------------------------------------------------------------
-
     def __check_projection(self, filename):
         try:
             with open(os.devnull) as null:
@@ -335,6 +438,22 @@ class Finder(object):
 
 
 def change_dict_value(dictionary, old_value, new_value):
+    """
+    Change a certain value from a dictionary.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    old_value : str, NoneType, bool
+        The value to be changed.
+    new_value : str, NoneType, bool
+        Replace value.
+
+    Returns
+    -------
+    dict
+    """
     for key, value in dictionary.items():
         if value == old_value:
             dictionary[key] = new_value
@@ -343,23 +462,12 @@ def change_dict_value(dictionary, old_value, new_value):
 
 
 def main():
-    options, flags = gs.parser()
-
-    for keys, values in options.items():
-        value_temp = values.split(',')
-
-        if len(value_temp) == 1:
-            pass
-        else:
-            options[keys] = tuple(value_temp)
-
-    options = change_dict_value(options, '', None)
-
-    importer = Finder(options['input_dir'], recursive=flags['e'], sensor=options['sensor'],
-                      projection=options['projection'], orbit=options['orbit'], polarization=options['polarization'],
-                      acquisition_mode=options['acquisition_mode'], start=options['start'], stop=options['stop'],
-                      product=options['product'], spacing=options['spacing'], sample=options['sample'],
-                      lines=options['lines'])
+    importer = FinderImport(options['input_dir'], recursive=flags['e'], sensor=options['sensor'],
+                            projection=options['projection'], orbit=options['orbit'],
+                            polarization=options['polarization'],
+                            acquisition_mode=options['acquisition_mode'], start=options['start'], stop=options['stop'],
+                            product=options['product'], spacing=options['spacing'], sample=options['sample'],
+                            lines=options['lines'])
 
     if flags['p']:
         importer.print_products()
@@ -377,4 +485,7 @@ def main():
 
 
 if __name__ == "__main__":
+    options, flags = gs.parser()
+    options = change_dict_value(options, '', None)
+
     sys.exit(main())
