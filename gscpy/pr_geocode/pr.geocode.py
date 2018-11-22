@@ -31,7 +31,7 @@
 #%end
 
 #%option
-#% key: epsg
+#% key: t_srs
 #% required: no
 #% multiple: no
 #% description: A target geographic reference system in EPSG, (Default is 4326):
@@ -137,10 +137,11 @@
 #%end
 
 # Auto Import Section --------------------------------------------------------------------------------------------------
-#%flag
-#% key: i
-#% description: Import processed imagery to a mapset
-#% guisection: Import
+#%option G_OPT_M_DIR
+#% key: input_dir
+#% required: no
+#% description: Directory where the scenes are:
+#%guisection: Import
 #%end
 
 #%option
@@ -149,16 +150,50 @@
 #% guisection: Import
 #%end
 
+# Settings Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: r
 #% description: Reproject raster data using r.import if needed
-#% guisection: Import
+#% guisection: Settings
 #%end
 
 #%flag
 #% key: l
 #% description: Link raster data instead of importing
-#% guisection: Import
+#% guisection: Settings
+#%end
+
+# Mapset Section -------------------------------------------------------------------------------------------------------
+#%flag
+#% key: c
+#% description: Create a new mapset
+#% guisection: Optional
+#%end
+
+#%option
+#% key: mapset
+#% required: no
+#% type: string
+#% multiple: no
+#% description: Name of mapset:
+#%guisection: Mapset
+#%end
+
+#%option
+#% key: location
+#% type: string
+#% multiple: no
+#% required: no
+#% description: Location name (not location path):
+#%guisection: Mapset
+#%end
+
+#%option G_OPT_F_INPUT
+#% key: dbase
+#% multiple: no
+#% required: no
+#% description: GRASS GIS database directory:
+#%guisection: Mapset
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
@@ -175,7 +210,7 @@
 #%end
 
 #%flag
-#% key: r
+#% key: b
 #% description: Enables removal of S1 GRD border noise
 #% guisection: Optional
 #%end
@@ -186,20 +221,20 @@ import os
 import re
 import sys
 
-import grass.script as gs
 from pyroSAR.snap.util import geocode
 
 try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    pass
+    raise ImportError("You must installed GRASS GIS to run this program.")
 
 
 class Geocode(object):
-    def __init__(self, dir, outdir, pattern=None, t_srs=4326, tr=20, polarizations='all', shapefile=None, scaling='dB',
-                 geocoding_type='Range-Doppler', removeS1BoderNoise=True, offset=None, externalDEMFile=None,
-                 externalDEMNoDataValue=None, externalDEMApplyEGM=True, basename_extensions=None, test=False,
+    def __init__(self, dir, outdir, pattern=None, t_srs=4326, resolution_value=20, polarizations='all', shapefile=None,
+                 scaling='dB',
+                 geocoding_type='Range-Doppler', removeS1BoderNoise=True, offset=None, external_dem_file=None,
+                 external_dem_nan=None, externalDEMApplyEGM=True, basename_extensions=None, test=False,
                  verbose=False):
         """
         Wrapper function for geocoding SAR images using pyroSAR.
@@ -214,7 +249,7 @@ class Geocode(object):
             A target geographic reference system in WKT, EPSG, PROJ4 or OPENGIS format.
             See function :func:`spatialist.auxil.crsConvert()` for details.
             Default: `4326 <http://spatialreference.org/ref/epsg/4326/>`_.
-        tr: int or float, optional
+        resolution_value: int or float, optional
             The target resolution in meters. Default is 20
         polarizations: list or {'VV', 'HH', 'VH', 'HV', 'all'}, optional
             The polarizations to be processed; can be a string for a single polarization e.g. 'VV' or a list of several
@@ -230,9 +265,9 @@ class Geocode(object):
         offset: tuple, optional
             A tuple defining offsets for left, right, top and bottom in pixels, e.g. (100, 100, 0, 0); this variable is
             overridden if a shapefile is defined. Default is None.
-        externalDEMFile: str or None, optional
+        external_dem_file: str or None, optional
             The absolute path to an external DEM file. Default is None.
-        externalDEMNoDataValue: int, float or None, optional
+        external_dem_nan: int, float or None, optional
             The no data value of the external DEM. If not specified (default) the function will try to read it from the
             specified external DEM.
         externalDEMApplyEGM: bool, optional
@@ -285,15 +320,15 @@ class Geocode(object):
 
         # Self definitions ---------------------------------------------------------------------------------------------
         self.t_srs = t_srs
-        self.tr = tr
+        self.resolution_value = resolution_value
         self.polarizations = polarizations
         self.shapefile = shapefile
         self.scaling = scaling
         self.geocoding_type = geocoding_type
         self.removeS1BoderNoise = removeS1BoderNoise
         self.offset = offset
-        self.externalDEMFile = externalDEMFile
-        self.externalDEMNoDataValue = externalDEMNoDataValue
+        self.external_dem_file = external_dem_file
+        self.external_dem_nan = external_dem_nan
         self.externalDEMApplyEGM = externalDEMApplyEGM
         self.basename_extensions = basename_extensions
         self.test = test
@@ -315,17 +350,17 @@ class Geocode(object):
                 sys.stdout.write('Start Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
                 sys.stdout.write('Start Processing File: <{0}> {1}'.format(str(os.path.basename(infile)), os.linesep))
 
-            geocode(infile, self.outdir, t_srs=self.t_srs, tr=self.tr, polarizations=self.polarizations,
+            geocode(infile, self.outdir, t_srs=self.t_srs, tr=self.resolution_value, polarizations=self.polarizations,
                     shapefile=self.shapefile, scaling=self.scaling, geocoding_type=self.geocoding_type,
                     removeS1BoderNoise=self.removeS1BoderNoise, offset=self.offset,
-                    externalDEMFile=self.externalDEMFile, externalDEMNoDataValue=self.externalDEMNoDataValue,
+                    externalDEMFile=self.external_dem_file, externalDEMNoDataValue=self.external_dem_nan,
                     externalDEMApplyEGM=self.externalDEMApplyEGM, test=self.test)
 
             if self.verbose:
                 sys.stdout.write('End Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
                 sys.stdout.flush()
 
-    def import_products(self, pattern=None, f=False, l=False, p=False):
+    def import_products(self, pattern=None, mapset=None, dbase=None, location=None, flags=None):
         """
         Import the processed data into a mapset.
 
@@ -343,10 +378,7 @@ class Geocode(object):
         None
         """
         args = {}
-        args['input'] = self.dir
-        args['f'] = f
-        args['l'] = l
-        args['p'] = p
+        args['input'] = self.outdir
         args['extension'] = 'GEOTIFF'
 
         if pattern:
@@ -354,10 +386,30 @@ class Geocode(object):
         else:
             args['pattern'] = ''
 
+        if mapset:
+            args['mapset'] = mapset
+        else:
+            args['mapset'] = ''
+
+        if dbase:
+            args['dbase'] = dbase
+        else:
+            args['dbase'] = ''
+
+        if location:
+            args['location'] = location
+        else:
+            args['location'] = ''
+
+        if flags:
+            pass
+        else:
+            flags = ''
+
         module = 'i.s1.import'
 
         try:
-            gs.run_command(module, input=self.dir, **args)
+            gs.run_command(module, flags=flags, input_dir=self.outdir, **args)
 
         except CalledModuleError as e:
             pass
@@ -391,14 +443,14 @@ def main():
     dir = options['dir']
     outdir = options['outdir']
     shapefile = options['shapefile']
-    t_srs = options['epsg']
-    tr = options['resolution_value']
+    t_srs = options['t_srs']
+    resolution_value = options['resolution_value']
     scaling = options['scaling']
     geocoding_type = options['geocoding_type']
     polarizations = options['polarizations']
     offset = options['offset']
-    externalDEMFile = options['external_dem_file']
-    externalDEMNoDataValue = options['external_dem_nan']
+    external_dem_file = options['external_dem_file']
+    external_dem_nan = options['external_dem_nan']
 
     if options['pattern'] == '':
         pattern = None
@@ -416,8 +468,8 @@ def main():
     else:
         t_srs = int(t_srs)
 
-    if tr is '':
-        tr = 20
+    if resolution_value is '':
+        resolution_value = 20
 
     if geocoding_type is 'Cross-Correlation':
         geocoding_type = 'SAR simulation cross correlation'
@@ -436,25 +488,47 @@ def main():
         offset_list = [int(item) for item in offset_list]
         offset = tuple(offset_list)
 
-    if externalDEMFile is '':
-        externalDEMFile = None
+    if external_dem_file is '':
+        external_dem_file = None
 
-    if externalDEMNoDataValue is '':
-        externalDEMNoDataValue = None
+    if external_dem_nan is '':
+        external_dem_nan = None
     else:
-        externalDEMNoDataValue = int(externalDEMNoDataValue)
+        external_dem_nan = int(external_dem_nan)
 
-    pp_geocode = Geocode(dir=dir, outdir=outdir, pattern=pattern, t_srs=t_srs, tr=tr, polarizations=polarizations,
+    pp_geocode = Geocode(dir=dir, outdir=outdir, pattern=pattern, t_srs=t_srs, resolution_value=resolution_value,
+                         polarizations=polarizations,
                          shapefile=shapefile, scaling=scaling, geocoding_type=geocoding_type,
-                         removeS1BoderNoise=flags['r'], offset=offset, externalDEMFile=externalDEMFile,
-                         externalDEMNoDataValue=externalDEMNoDataValue, externalDEMApplyEGM=flags['e'],
-                         test=flags['t'], verbose=flags['p'])
+                         removeS1BoderNoise=flags['b'], offset=offset, external_dem_file=external_dem_file,
+                         external_dem_nan=external_dem_nan, externalDEMApplyEGM=flags['e'],
+                         test=flags['t'])
+
+    if flags['p']:
+        pp_geocode.print_products()
+        return 0
 
     pp_geocode.geocode()
 
     if flags['i']:
         pp_geocode.import_products(pattern=options['pattern'], f=flags['f'], l=flags['l'],
                                    p=flags['p'])
+
+    if flags['i']:
+        pattern = options['pattern']
+        mapset = options['mapset']
+        dbase = options['dbase']
+        location = options['location']
+
+        flag = ''
+        flag_list = ['c', 'r', 'l']
+
+        for item in flag_list:
+            if flags[item]:
+                flag += item
+            else:
+                pass
+
+        pp_geocode.import_products(pattern=pattern, mapset=mapset, dbase=dbase, location=location, flags=flags)
 
     return 0
 
