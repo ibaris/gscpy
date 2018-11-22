@@ -2,7 +2,7 @@
 
 ############################################################################
 #
-# MODULE:      i.s1.import
+# MODULE:      i.fr.import
 # AUTHOR(S):   Ismail Baris
 # PURPOSE:     Import pyroSAR dataset in a directory based on their metadata.
 #

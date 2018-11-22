@@ -2,7 +2,7 @@
 
 ############################################################################
 #
-# MODULE:       g.database
+# MODULE:       g.c.database
 # AUTHOR(S):    Ismail Baris
 # PURPOSE:      Create a mapset in a GRASS GIS Database.
 #

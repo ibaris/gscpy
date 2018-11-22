@@ -131,6 +131,7 @@ class Grassify(object):
         Notes
         -----
         Flags:
+            * r : Overwrite file if it is existent (be careful padawan!)
         """
         # Self Definitions ---------------------------------------------------------------------------------------------
         self.extension = '.py'
