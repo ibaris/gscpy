@@ -184,14 +184,11 @@ class S1Import(object):
                         gs.fatal(_('Projection of dataset does not appear to match current location. '
                                    'Force reprojecting dataset by -r flag.'))
 
-                if os.path.exists(f):
-                    pass
-                else:
-                    self.__import_file(f, module, args)
+                self.__import_file(f, module, args)
 
     def create_mapset(self, mapset, dbase=None, location=None):
-        module = 'g.mapset'
-        gs.run_command(module, flags='c', mapset=mapset, dbase=dbase, location=location)
+        module = 'g.c.mapset'
+        gs.run_command(module, mapset=mapset, dbase=dbase, location=location)
 
     def print_products(self):
         for f in self.files:
@@ -249,11 +246,8 @@ class S1Import(object):
 
         return ret
 
-    def __import_file(self, filename, module, args, mapname=None):
-        if mapname is None:
-            mapname = os.path.splitext(os.path.basename(filename))[0]
-        else:
-            pass
+    def __import_file(self, filename, module, args):
+        mapname = os.path.splitext(os.path.basename(filename))[0]
 
         gs.message(_('Processing <{}>...').format(mapname))
 
@@ -268,18 +262,22 @@ class S1Import(object):
             pass
 
 
+def change_dict_value(dictionary, old_value, new_value):
+    for key, value in dictionary.items():
+        if value == old_value:
+            dictionary[key] = new_value
+
+    return dictionary
+
+
 def main():
-    if options['pattern'] == '':
-        pattern = None
-    else:
-        pattern = options['pattern']
+    options, flags = gs.parser()
 
-    if options['extension'] == 'ENVI':
-        extension = '.img'
-    else:
-        extension = '.tif*'
+    options = change_dict_value(options, '', None)
+    options = change_dict_value(options, 'ENVI', '.img')
+    options = change_dict_value(options, 'GEOTIFF', '.tif*')
 
-    importer = S1Import(options['input_dir'], pattern=pattern, extension=extension)
+    importer = S1Import(options['input_dir'], pattern=options['pattern'], extension=options['extension'])
 
     if flags['p']:
         importer.print_products()
@@ -297,5 +295,4 @@ def main():
 
 
 if __name__ == "__main__":
-    options, flags = gs.parser()
     sys.exit(main())
