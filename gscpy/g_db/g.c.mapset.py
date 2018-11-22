@@ -155,6 +155,22 @@ class Mapset(object):
 
 
 def change_dict_value(dictionary, old_value, new_value):
+    """
+    Change a certain value from a dictionary.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    old_value : str, NoneType, bool
+        The value to be changed.
+    new_value : str, NoneType, bool
+        Replace value.
+
+    Returns
+    -------
+    dict
+    """
     for key, value in dictionary.items():
         if value == old_value:
             dictionary[key] = new_value
