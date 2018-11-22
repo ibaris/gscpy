@@ -25,7 +25,7 @@
 
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
-#% key: input
+#% key: input_dir
 #% description: Directory where the scenes are:
 #% required: yes
 #%guisection: Input
@@ -62,6 +62,39 @@
 #% guisection: Settings
 #%end
 
+# Mapset Section -------------------------------------------------------------------------------------------------------
+#%flag
+#% key: c
+#% description: Create a new mapset
+#% guisection: Mapset
+#%end
+
+#%option
+#% key: mapset
+#% required: no
+#% type: string
+#% multiple: no
+#% description: Name of mapset:
+#%guisection: Mapset
+#%end
+
+#%option
+#% key: location
+#% type: string
+#% multiple: no
+#% required: no
+#% description: Location name (not location path):
+#%guisection: Mapset
+#%end
+
+#%option G_OPT_M_DIR
+#% key: dbase
+#% multiple: no
+#% required: no
+#% description: GRASS GIS database directory:
+#%guisection: Mapset
+#%end
+
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
@@ -78,37 +111,37 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    pass
+    raise ImportError("You must installed GRASS GIS to run this program.")
 
 try:
     from osgeo import gdal, osr
 except ImportError as e:
     gs.fatal(_("Flag -r requires GDAL library: {}").format(e))
 
+    raise ImportError("You must installed GRASS GIS to run this program.")
+
 
 class S1Import(object):
-    def __init__(self, dir, pattern=None, extension=None):
+    def __init__(self, input_dir, pattern=None, extension=None):
         """
         Import pre-processed (pr.geocode) Sentinel 1 data into a mapset.
 
         Parameters
         ----------
-        dir : str
+        input_dir : str
             Directory where the scenes are.
-        mapname : str
-            Mapname where the scenes where imported.
-        pattern : str
+        pattern : str or None, optional
             A pattern of filename which will be imported.
-        extension : {'ENVI', 'GEOTIFF'}
+        extension : {'ENVI', 'GEOTIFF'}, optional
             Which extensions should be recognized?
         """
         # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
 
-        if not os.path.exists(dir):
-            gs.fatal(_('Input directory <{0}> not exists').format(dir))
+        if not os.path.exists(input_dir):
+            gs.fatal(_('Input directory <{0}> not exists').format(input_dir))
         else:
-            self.dir = dir
+            self.dir = input_dir
 
         # Create Pattern and find files --------------------------------------------------------------------------------
         if extension is not None:
@@ -151,13 +184,17 @@ class S1Import(object):
                         gs.fatal(_('Projection of dataset does not appear to match current location. '
                                    'Force reprojecting dataset by -r flag.'))
 
-                self.__import_file(f, module, args)
+                if os.path.exists(f):
+                    pass
+                else:
+                    self.__import_file(f, module, args)
+
+    def create_mapset(self, mapset, dbase=None, location=None):
+        module = 'g.mapset'
+        gs.run_command(module, flags='c', mapset=mapset, dbase=dbase, location=location)
 
     def print_products(self):
         for f in self.files:
-            # print self.__check_projection(f)
-            # print self.__raster_epsg(f)
-
             sys.stdout.write(
                 'Detected File <{0}> {1} (EPSG: {2}){3}'.format(str(f), '1' if self.__check_projection(f) else '0',
                                                                 str(self.__raster_epsg(f)), os.linesep))
@@ -242,10 +279,17 @@ def main():
     else:
         extension = '.tif*'
 
-    importer = S1Import(options['input'], pattern=pattern, extension=extension)
+    importer = S1Import(options['input_dir'], pattern=pattern, extension=extension)
 
     if flags['p']:
         importer.print_products()
+        return 0
+
+    if flags['c']:
+        if options['mapset'] == '':
+            raise ValueError("Please define a mapset.")
+        else:
+            importer.create_mapset(mapset=options['mapset'], dbase=options['dbase'], location=options['location'])
 
     importer.import_products(flags['r'], flags['l'])
 
