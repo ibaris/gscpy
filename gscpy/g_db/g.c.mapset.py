@@ -66,6 +66,9 @@ class Mapset(object):
         LOCATION, or GISDBASE. This is a fairly radical maneuver to run mid-session, take care when running the GUI
         at the same time.
 
+        In GRASS GIS their is a similar function (`g.mapset`). This function shortens the flags and creates directly
+        a new mapset if it is not existent.
+
         Parameters
         ----------
         mapset : str
