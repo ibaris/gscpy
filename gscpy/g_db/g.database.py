@@ -112,17 +112,20 @@ class Database(object):
 
         Examples
         --------
+         The general usage is::
+            $ g.database [-l] db_dir=string db_name=string [t_srs=integer] [t_srs_from_file=string] [--verbose] [--quiet]
+
         Create a new location, including it's default PERMANENT mapset, without entering the new location using
         a EPSG code::
-            $ g.database db_dir=Goettingen dbase=/home/user/grassdata db_name=germany t_srs=32630
+            $ g.database db_dir=/home/user/grassdata db_name=germany t_srs=32630
 
         Create a new location, including it's default PERMANENT mapset, without entering the new location using
         a georeferenced raster file::
-            $ g.database db_dir=Goettingen dbase=/home/user/grassdata db_name=germany t_srs_from_file=myFile.tiff
+            $ g.database db_dir=/home/user/grassdata db_name=germany t_srs_from_file=myFile.tiff
 
 
         Create new mapset within the new location and launch GRASS GIS within that mapset::
-            $ g.database -l db_dir=Goettingen dbase=/home/user/grassdata db_name=germany t_srs=32630
+            $ g.database -l db_dir=/home/user/grassdata db_name=germany t_srs=32630
 
         Notes
         -----
@@ -131,6 +134,8 @@ class Database(object):
         This class try to find ['grass70', 'grass71', 'grass72', 'grass73', 'grass74'] commands. The list can be
         easily expand to another versions of GRASS GIS.
 
+        Flags:
+            * l : Launch mapset with GRASS GIS.
         """
 
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------

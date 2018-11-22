@@ -18,7 +18,7 @@
 #%module
 #% description: Create a mapset in aGRASS GIS Database.
 #% keyword: auxiliary
-#% keyword: database
+#% keyword: mapset
 #% keyword: create
 #%end
 
@@ -91,6 +91,9 @@ class Mapset(object):
 
         Examples
         --------
+        The general usage is::
+            $ g.c.mapset [] mapset=string [dbase=string] [location=string] [--verbose] [--quiet]
+
         Creation of a mapset within a GRASS GIS session::
             $ g.c.mapset mapset=Goettingen
 

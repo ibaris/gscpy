@@ -2,9 +2,9 @@
 
 ############################################################################
 #
-# MODULE:      i.s1.import
+# MODULE:      i.dr.import
 # AUTHOR(S):   Ismail Baris
-# PURPOSE:     Import Sentinel 1 Data Processed with pr.geocode.
+# PURPOSE:     Import data into a mapset from a file with considering a certain pattern.
 #
 # COPYRIGHT:   (C) Ismail Baris and Nils von Norsinski
 #
@@ -16,10 +16,10 @@
 
 """
 #%Module
-#% description: Import Sentinel 1 Data processed with pr.geocode.
+#% description: Import data into a mapset from a file with considering a certain pattern.
 #% keyword: imagery
 #% keyword: satellite
-#% keyword: Sentinel
+#% keyword: auxiliary
 #% keyword: import
 #%end
 
@@ -74,7 +74,7 @@
 #% required: no
 #% type: string
 #% multiple: no
-#% description: Name of mapset:
+#% description: Name of mapset.
 #%guisection: Mapset
 #%end
 
@@ -83,7 +83,7 @@
 #% type: string
 #% multiple: no
 #% required: no
-#% description: Location name (not location path):
+#% description: Location name (not location path).
 #%guisection: Mapset
 #%end
 
@@ -91,14 +91,14 @@
 #% key: dbase
 #% multiple: no
 #% required: no
-#% description: GRASS GIS database directory:
+#% description: GRASS GIS database directory.
 #%guisection: Mapset
 #%end
 
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
-#% description: Print the detected files and exit
+#% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
 """
@@ -121,19 +121,61 @@ except ImportError as e:
     raise ImportError("You must installed GRASS GIS to run this program.")
 
 
-class S1Import(object):
+class DirImport(object):
     def __init__(self, input_dir, pattern=None, extension=None):
         """
-        Import pre-processed (pr.geocode) Sentinel 1 data into a mapset.
+        Import data into a mapset from a file with considering a certain pattern.
 
         Parameters
         ----------
         input_dir : str
-            Directory where the scenes are.
-        pattern : str or None, optional
-            A pattern of filename which will be imported.
+            The directory where the files are located.
+        pattern : str, optional
+            The pattern of file names. If not specified all files with selected extension will be imported.
         extension : {'ENVI', 'GEOTIFF'}, optional
-            Which extensions should be recognized?
+            Which extensions should be recognized? Default is 'GEOTIFF'
+
+        Attributes
+        ----------
+        input_dir : str
+        extension : str
+        filter_p : str
+            Combines pattern and extension.
+        files : list
+            All detected files.
+
+        Methods
+        -------
+        import_products(reproject=False, link=False)
+            Import detected files.
+        create_mapset(mapset, dbase=None, location=None)
+            Create a new mapset.
+        print_products()
+            Print all detected files.
+
+        Examples
+        --------
+        The general usage is::
+            $ i.dr.import [-r -l -c -p] input_dir=string [pattern=string] [extension=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
+
+
+        Import files that starts with 'S1' from a directory in current mapset and reproject it::
+            $ i.dr.import -r input_dir=/home/user/data pattern=S1.*
+
+
+        Import files that starts with 'S1' from a directory in a new mapset and reproject it::
+            $ i.dr.import -c -r input_dir=/home/user/data pattern=S1.* mapset=Goettingen
+
+        Notes
+        -----
+        Note, it is important for the parameter `pattern`  that the asterisk('*') contains a dot (see examples).
+
+        Flags:
+            * r : Reproject raster data (using r.import if needed).
+            * l : Link raster data instead of importing.
+            * c : Create a new mapset.
+            * p : Print the detected files and exit.
+
         """
         # Initialize Directory -----------------------------------------------------------------------------------------
         self._dir_list = []
@@ -141,13 +183,13 @@ class S1Import(object):
         if not os.path.exists(input_dir):
             gs.fatal(_('Input directory <{0}> not exists').format(input_dir))
         else:
-            self.dir = input_dir
+            self.input_dir = input_dir
 
         # Create Pattern and find files --------------------------------------------------------------------------------
         if extension is not None:
             self.extension = extension
         else:
-            self.extension = '.img'
+            self.extension = '.tif*'
 
         if pattern is not None:
             filter_p = pattern + self.extension
@@ -167,6 +209,20 @@ class S1Import(object):
     # Public Methods
     # ------------------------------------------------------------------------------------------------------------------
     def import_products(self, reproject=False, link=False):
+        """
+        Import detected files.
+
+        Parameters
+        ----------
+        reproject : bool
+            Reproject raster data (using r.import if needed).
+        link : bool
+            Link raster data instead of importing.
+
+        Returns
+        -------
+        None
+        """
         args = {}
         if link:
             module = 'r.external'
@@ -187,10 +243,33 @@ class S1Import(object):
                 self.__import_file(f, module, args)
 
     def create_mapset(self, mapset, dbase=None, location=None):
+        """
+        Create a new mapset calling the module `g.c.mapset`.
+
+        Parameters
+        ----------
+        mapset : str
+            Name of mapset.
+        dbase : str, optional
+            Location of GRASS GIS database
+        mapset : str, optional
+            Name of the mapset that will be created.
+
+        Returns
+        -------
+        None
+        """
         module = 'g.c.mapset'
         gs.run_command(module, mapset=mapset, dbase=dbase, location=location)
 
     def print_products(self):
+        """
+        Print all detected files.
+
+        Returns
+        -------
+        None
+        """
         for f in self.files:
             sys.stdout.write(
                 'Detected File <{0}> {1} (EPSG: {2}){3}'.format(str(f), '1' if self.__check_projection(f) else '0',
@@ -202,7 +281,7 @@ class S1Import(object):
     def __filter(self, filter_p):
         pattern = re.compile(filter_p)
         files = []
-        for rec in os.walk(self.dir):
+        for rec in os.walk(self.input_dir):
             if not rec[-1]:
                 continue
 
@@ -263,6 +342,22 @@ class S1Import(object):
 
 
 def change_dict_value(dictionary, old_value, new_value):
+    """
+    Change a certain value from a dictionary.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    old_value : str, NoneType, bool
+        The value to be changed.
+    new_value : str, NoneType, bool
+        Replace value.
+
+    Returns
+    -------
+    dict
+    """
     for key, value in dictionary.items():
         if value == old_value:
             dictionary[key] = new_value
@@ -271,13 +366,7 @@ def change_dict_value(dictionary, old_value, new_value):
 
 
 def main():
-    options, flags = gs.parser()
-
-    options = change_dict_value(options, '', None)
-    options = change_dict_value(options, 'ENVI', '.img')
-    options = change_dict_value(options, 'GEOTIFF', '.tif*')
-
-    importer = S1Import(options['input_dir'], pattern=options['pattern'], extension=options['extension'])
+    importer = DirImport(options['input_dir'], pattern=options['pattern'], extension=options['extension'])
 
     if flags['p']:
         importer.print_products()
@@ -295,4 +384,10 @@ def main():
 
 
 if __name__ == "__main__":
+    options, flags = gs.parser()
+
+    options = change_dict_value(options, '', None)
+    options = change_dict_value(options, 'ENVI', '.img')
+    options = change_dict_value(options, 'GEOTIFF', '.tif*')
+
     sys.exit(main())
