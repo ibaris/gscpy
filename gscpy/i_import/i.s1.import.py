@@ -26,7 +26,7 @@
 # Input Section --------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
 #% key: input_dir
-#% description: Directory where the scenes are:
+#% description: The directory where the files are located.
 #% required: yes
 #%guisection: Input
 #%end
@@ -34,7 +34,7 @@
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
 #% key: pattern
-#% description: File name pattern to import:
+#% description: The pattern of file names.
 #% guisection: Filter
 #%end
 
@@ -45,27 +45,27 @@
 #% multiple: no
 #% answer: ENVI
 #% options: ENVI, GEOTIFF
-#% description: Which file extension should be imported?:
+#% description: Which extension should be considered?
 #% guisection: Filter
 #%end
 
 # Settings Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: r
-#% description: Reproject raster data using r.import if needed
+#% description: Reproject raster data (using r.import if needed).
 #% guisection: Settings
 #%end
 
 #%flag
 #% key: l
-#% description: Link raster data instead of importing
+#% description: Link raster data instead of importing.
 #% guisection: Settings
 #%end
 
 # Mapset Section -------------------------------------------------------------------------------------------------------
 #%flag
 #% key: c
-#% description: Create a new mapset
+#% description: Create a new mapset.
 #% guisection: Mapset
 #%end
 
@@ -98,7 +98,7 @@
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
-#% description: Print raster data to be imported and exit
+#% description: Print the detected files and exit
 #% guisection: Optional
 #%end
 """
