@@ -14,7 +14,6 @@
 #
 #############################################################################
 
-"""
 #%module
 #% description: Wrapper function for geocoding SAR images using ESA SNAP.
 #% keyword: processing
@@ -220,7 +219,7 @@
 #% description: Enables removal of S1 GRD border noise
 #% guisection: Optional
 #%end
-"""
+
 
 import datetime as dt
 import os
@@ -244,108 +243,105 @@ except ImportError as e:
 
 
 class Geocode(object):
+    """
+     Wrapper function for geocoding SAR images using pyroSAR.
+
+     Parameters
+     ----------
+     input_dir: str
+         Directory where the Sentinel-Data is.
+     outdir: str
+         The directory to write the final files to.
+     t_srs: int, str or osr.SpatialReference
+         A target geographic reference system in WKT, EPSG, PROJ4 or OPENGIS format.
+         See function :func:`spatialist.auxil.crsConvert()` for details.
+         Default: `4326 <http://spatialreference.org/ref/epsg/4326/>`_.
+     resolution_value: int or float, optional
+         The target resolution in meters. Default is 20
+     polarizations: list or {'VV', 'HH', 'VH', 'HV', 'all'}, optional
+         The polarizations to be processed; can be a string for a single polarization e.g. 'VV' or a list of several
+         polarizations e.g. ['VV', 'VH']. Default is 'all'.
+     shapefile: str or :py:class:`~spatialist.vector.Vector`, optional
+         A vector geometry for subsetting the SAR scene to a test site. Default is None.
+     scaling: {'dB', 'db', 'linear'}, optional
+         Should the output be in linear or decibel scaling? Default is 'dB'.
+     geocoding_type: {'Range-Doppler', 'SAR simulation cross correlation'}, optional
+         The type of geocoding applied; can be either 'Range-Doppler' (default) or 'SAR simulation cross correlation'
+     removeS1BoderNoise: bool, optional
+         Enables removal of S1 GRD border noise (default).
+     offset: tuple, optional
+         A tuple defining offsets for left, right, top and bottom in pixels, e.g. (100, 100, 0, 0); this variable is
+         overridden if a shapefile is defined. Default is None.
+     external_dem_file: str or None, optional
+         The absolute path to an external DEM file. Default is None.
+     external_dem_nan: int, float or None, optional
+         The no data value of the external DEM. If not specified (default) the function will try to read it from the
+         specified external DEM.
+     externalDEMApplyEGM: bool, optional
+         Apply Earth Gravitational Model to external DEM? Default is True.
+     basename_extensions: list of str
+         names of additional parameters to append to the basename, e.g. ['orbitNumber_rel']
+     test: bool, optional
+         If set to True the workflow xml file is only written and not executed. Default is False.
+
+     Attributes
+     ----------
+     files : list
+         All detected files.
+
+     Methods
+     -------
+     geocode()
+         Start the geocoding process.
+     import_products(pattern=None, mapset=None, dbase=None, location=None, flags=None)
+         Import detected files.
+     print_products()
+         Print all detected files.
+
+     Examples
+     --------
+     The general usage is
+     ::
+         $ pr.geocode [-e -i -r -l -c -p -t -b] input_dir=string outdir=string [pattern=string] [t_srs=string] [t_srs_from_file=string]
+             [resolution_value=integer] [polarizations=string] [shapefile=string] [scaling=string]
+             [geocoding_type=string] [offset=string] [external_dem_file=string] [external_dem_nan=integer]
+             [basename_extensions=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
+
+
+     Import Sentinel 1A files geocode and import them in current mapset and reproject it
+     ::
+         $ pr.geocode -r input_dir=/home/user/data outdir=/home/user/data/processed t_srs=43265
+
+     Import Sentinel 1A files geocode and import them in a new mapset within another GRASS GIS database
+     ::
+         $ pr.geocode -r input_dir=/home/user/data outdir=/home/user/data/processed t_srs=43265 mapset=Goettingen dbase=/home/user/grassdata/germany
+
+     Note
+     ----
+     If only one polarization is selected the results are directly written to GeoTiff.
+     Otherwise the results are first written to a folder containing ENVI files and then transformed to GeoTiff files
+     (one for each polarization).
+     If GeoTiff would directly be selected as output format for multiple polarizations then a multilayer GeoTiff
+     is written by SNAP which is considered an unfavorable format
+
+     Notes
+     -----
+     **Flags:**
+         * e : Apply Earth Gravitational Model to external DEM.
+         * i : Import processed files in a mapset.
+         * r : Reproject raster data (using r.import if needed).
+         * l : Link raster data instead of importing.
+         * c : Create a new mapset.
+         * p : Print the detected files and exit.
+         * t : Write only the workflow in xml file
+         * b : Enables removal of S1 GRD border noise.
+
+     """
+
     def __init__(self, input_dir, outdir, pattern=None, t_srs=None, t_srs_from_file=None, resolution_value=20,
                  polarizations='all', shapefile=None, scaling='dB', geocoding_type='Range-Doppler',
                  removeS1BoderNoise=True, offset=None, external_dem_file=None, external_dem_nan=None,
                  externalDEMApplyEGM=True, basename_extensions=None, test=False, verbose=False):
-        """
-        Wrapper function for geocoding SAR images using pyroSAR.
-
-        Parameters
-        ----------
-        input_dir: str
-            Directory where the Sentinel-Data is.
-        outdir: str
-            The directory to write the final files to.
-        t_srs: int, str or osr.SpatialReference
-            A target geographic reference system in WKT, EPSG, PROJ4 or OPENGIS format.
-            See function :func:`spatialist.auxil.crsConvert()` for details.
-            Default: `4326 <http://spatialreference.org/ref/epsg/4326/>`_.
-        resolution_value: int or float, optional
-            The target resolution in meters. Default is 20
-        polarizations: list or {'VV', 'HH', 'VH', 'HV', 'all'}, optional
-            The polarizations to be processed; can be a string for a single polarization e.g. 'VV' or a list of several
-            polarizations e.g. ['VV', 'VH']. Default is 'all'.
-        shapefile: str or :py:class:`~spatialist.vector.Vector`, optional
-            A vector geometry for subsetting the SAR scene to a test site. Default is None.
-        scaling: {'dB', 'db', 'linear'}, optional
-            Should the output be in linear or decibel scaling? Default is 'dB'.
-        geocoding_type: {'Range-Doppler', 'SAR simulation cross correlation'}, optional
-            The type of geocoding applied; can be either 'Range-Doppler' (default) or 'SAR simulation cross correlation'
-        removeS1BoderNoise: bool, optional
-            Enables removal of S1 GRD border noise (default).
-        offset: tuple, optional
-            A tuple defining offsets for left, right, top and bottom in pixels, e.g. (100, 100, 0, 0); this variable is
-            overridden if a shapefile is defined. Default is None.
-        external_dem_file: str or None, optional
-            The absolute path to an external DEM file. Default is None.
-        external_dem_nan: int, float or None, optional
-            The no data value of the external DEM. If not specified (default) the function will try to read it from the
-            specified external DEM.
-        externalDEMApplyEGM: bool, optional
-            Apply Earth Gravitational Model to external DEM? Default is True.
-        basename_extensions: list of str
-            names of additional parameters to append to the basename, e.g. ['orbitNumber_rel']
-        test: bool, optional
-            If set to True the workflow xml file is only written and not executed. Default is False.
-
-        Attributes
-        ----------
-        files : list
-            All detected files.
-
-        Methods
-        -------
-        geocode()
-            Start the geocoding process.
-        import_products(pattern=None, mapset=None, dbase=None, location=None, flags=None)
-            Import detected files.
-        print_products()
-            Print all detected files.
-
-        Examples
-        --------
-        The general usage is::
-            $ pr.geocode [-e -i -r -l -c -p -t -b] input_dir=string outdir=string [pattern=string] [t_srs=string] [t_srs_from_file=string]
-                [resolution_value=integer] [polarizations=string] [shapefile=string] [scaling=string]
-                [geocoding_type=string] [offset=string] [external_dem_file=string] [external_dem_nan=integer]
-                [basename_extensions=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
-
-
-        Import Sentinel 1A files geocode and import them in current mapset and reproject it::
-            $ pr.geocode -r input_dir=/home/user/data outdir=/home/user/data/processed t_srs=43265
-
-        Import Sentinel 1A files geocode and import them in a new mapset within another GRASS GIS database::
-            $ pr.geocode -r input_dir=/home/user/data outdir=/home/user/data/processed t_srs=43265 mapset=Goettingen dbase=/home/user/grassdata/germany
-
-        Note
-        ----
-        If only one polarization is selected the results are directly written to GeoTiff.
-        Otherwise the results are first written to a folder containing ENVI files and then transformed to GeoTiff files
-        (one for each polarization).
-        If GeoTiff would directly be selected as output format for multiple polarizations then a multilayer GeoTiff
-        is written by SNAP which is considered an unfavorable format
-
-        Notes
-        -----
-        Flags :
-            * e : Apply Earth Gravitational Model to external DEM.
-            * i : Import processed files in a mapset.
-            * r : Reproject raster data (using r.import if needed).
-            * l : Link raster data instead of importing.
-            * c : Create a new mapset.
-            * p : Print the detected files and exit.
-            * t : Write only the workflow in xml file
-            * b : Enables removal of S1 GRD border noise.
-
-        See Also
-        --------
-        :class:`pyroSAR.drivers.ID`,
-        :class:`spatialist.vector.Vector`,
-        :func:`spatialist.auxil.crsConvert()`
-
-
-        """
 
         # Check Georeference -------------------------------------------------------------------------------------------
         if t_srs is None and t_srs_from_file is None:

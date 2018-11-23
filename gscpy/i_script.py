@@ -14,7 +14,6 @@
 #
 #############################################################################
 
-"""
 #%Module
 #% description: Import Scripts from a package to GRASS GIS.
 #% keyword: script
@@ -31,7 +30,7 @@
 #%end
 
 #%option G_OPT_M_DIR
-#% key: export
+#% key: export_path
 #% description: Script directory of GRASS GIS (automatically in Linux systems).
 #% required: no
 #%guisection: Input
@@ -53,7 +52,7 @@
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
 #% key: p
-#% description: Print python data to be imported and exit.
+#% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
 
@@ -62,7 +61,8 @@
 #% description: Replace script.
 #% guisection: Optional
 #%end
-"""
+
+
 import os
 import re
 import shutil
@@ -75,64 +75,73 @@ except ImportError:
 
 
 class Grassify(object):
+    """
+    Import Scripts from a package to GRASS GIS.
+
+    This class will copy any suitable python file like 'i_dr_import.py' into the GRASS script folder without
+    the '.py' extension and changes the name to 'i.dr.import'. This class will exclude such files like
+    '__init__.py' or 'setup.py'. For more exclusions the parameter `exclusion` can be used.
+
+    Parameters
+    ----------
+    input_dir : str
+        Directory of python files
+    export_path : str, optional
+        Script directory of GRASS GIS (automatically in Linux systems).
+    pattern : str, optional
+        The pattern of file names.
+    exclusion : str
+         Which files or pattern should be excluded?.
+
+    Attributes
+    ----------
+    extension : list
+        A list which contains all supported GRASS GIS candidates.
+    exclusion : str
+    import_path : str
+        Dir parameter.
+    export_path : str
+    filter_p : str
+        Combines pattern and extension.
+    files : list
+        All detected files.
+
+    Methods
+    -------
+    copy(replace=False)
+        Copy files.
+    print_products()
+        Print all detected files.
+
+    Examples
+    --------
+    The general usage is
+    ::
+        $ i.script [-r-p] input_dir=string [pattern=string] [exclusion=string] [export_path=string] [--verbose] [--quiet]
+
+
+    Import all suitable python files from a directory into the GRASS script folder
+    ::
+        $ i.script input_dir=/home/user/package
+
+
+    Import all suitable python files from a directory into the GRASS script folder and exclude all files that
+    include the string 'test'
+    ::
+        $ i.script input_dir=/home/user/package exclude=test.*
+
+    Note
+    ----
+    This class copies all files and replaces all '_' with '.'.
+
+    Notes
+    -----
+    **Flags:**
+        * r : Overwrite file if it is existent **(be careful padawan!)**
+        * p : Print the detected files and exit.
+    """
+
     def __init__(self, input_dir, export_path=None, pattern=None, exclusion=None):
-        """
-        Import Scripts from a package to GRASS GIS.
-
-        This class will copy any suitable python file like 'i.dr.import.py' into the GRASS script folder without
-        the '.py' extension. This class will exclude such files like '__init__.py' or 'setup.py'. For more exclusions
-        the parameter `exclusion` can be used.
-
-        Parameters
-        ----------
-        input_dir : str
-            Directory of python files
-        export_path : str, optional
-            Script directory of GRASS GIS (automatically in Linux systems).
-        pattern : str, optional
-            The pattern of file names.
-        exclusion : str
-             Which files or pattern should be excluded?.
-
-        Attributes
-        ----------
-        extension : list
-            A list which contains all supported GRASS GIS candidates.
-        exclusion : str
-        import_path : str
-            Dir parameter.
-        export_path : str
-        filter_p : str
-            Combines pattern and extension.
-        files : list
-            All detected files.
-
-        Methods
-        -------
-        copy(replace=False)
-            Copy files.
-        print_products()
-            Print all detected files.
-
-        Examples
-        --------
-        The general usage is::
-            $ i.script [-r] input_dir=string [pattern=string] [exclusion=string] [export_path=string] [--verbose] [--quiet]
-
-
-        Import all suitable python files from a directory into the GRASS script folder::
-            $ i.script input_dir=/home/user/package
-
-
-        Import all suitable python files from a directory into the GRASS script folder and exclude all files that
-        include the string 'test'::
-            $ i.script input_dir=/home/user/package exclude=test.*
-
-        Notes
-        -----
-        Flags:
-            * r : Overwrite file if it is existent (be careful padawan!)
-        """
         # Self Definitions ---------------------------------------------------------------------------------------------
         self.extension = '.py'
 
@@ -185,6 +194,7 @@ class Grassify(object):
         for i in range(len(filename_split)):
             old_name = self.files[i]
             base = filename_split[i][0]
+            base = base.replace('_', '.')
 
             new_name = os.path.join(self.export_path, base)
 
@@ -198,7 +208,7 @@ class Grassify(object):
 
     def print_products(self):
         for f in self.files:
-            sys.stdout.write('Detected Files <{0}>'.format(f))
+            sys.stdout.write('Detected Files <{0}> {1}'.format(f, os.linesep))
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
@@ -226,26 +236,37 @@ class Grassify(object):
         return files
 
 
+def change_dict_value(dictionary, old_value, new_value):
+    """
+    Change a certain value from a dictionary.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    old_value : str, NoneType, bool
+        The value to be changed.
+    new_value : str, NoneType, bool
+        Replace value.
+
+    Returns
+    -------
+    dict
+    """
+    for key, value in dictionary.items():
+        if value == old_value:
+            dictionary[key] = new_value
+
+    return dictionary
+
+
 def main():
-    if options['pattern'] == '':
-        pattern = None
-    else:
-        pattern = options['pattern']
-
-    if options['exclusion'] == '':
-        exclusion = None
-    else:
-        exclusion = options['exclusion']
-
-    if options['export'] == '':
-        export = None
-    else:
-        export = options['export']
-
-    grassify = Grassify(options['input_dir'], export_path=export, pattern=pattern, exclusion=exclusion)
+    grassify = Grassify(options['input_dir'], export_path=options['export_path'], pattern=options['pattern'],
+                        exclusion=options['exclusion'])
 
     if flags['p']:
         grassify.print_products()
+        return 0
 
     grassify.copy(replace=flags['r'])
 
@@ -254,4 +275,14 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
+    options = change_dict_value(options, '', None)
+
     sys.exit(main())
+
+files = ["/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/i_script.py",
+         "/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/ds1_download/ds1.download.py",
+         "/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/pr_geocode/pr_geocode.py",
+         "/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/i_import/i_fr_import.py",
+         "/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/i_import/i_dr_import.py",
+         "/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/g_db/g_database.py",
+         "/home/ibaris/Dropbox/Dropbox/GitHub/gscpy/gscpy/g_db/g_c_mapset.py"]

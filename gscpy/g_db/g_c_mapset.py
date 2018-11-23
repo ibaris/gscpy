@@ -14,7 +14,7 @@
 #
 #############################################################################
 
-"""
+
 #%module
 #% description: Create a mapset in aGRASS GIS Database.
 #% keyword: auxiliary
@@ -48,7 +48,7 @@
 #% description: GRASS GIS database directory:
 #%guisection: Input
 #%end
-"""
+
 
 import sys
 
@@ -60,60 +60,64 @@ except ImportError:
 
 
 class Mapset(object):
+    """
+    Create a mapset in a GRASS GIS Database if it is not existent. This will changes the current working MAPSET,
+    LOCATION, or GISDBASE. This is a fairly radical maneuver to run mid-session, take care when running the GUI
+    at the same time.
+
+    In GRASS GIS their is a similar function (`g.mapset`). This function shortens the flags and creates directly
+    a new mapset if it is not existent.
+
+    Parameters
+    ----------
+    mapset : str
+        Name of mapset.
+    dbase : str, optional
+        Location of GRASS GIS database
+    mapset : str, optional
+        Name of the mapset that will be created.
+
+    Attributes
+    ----------
+    mapset : str
+    dbase : str
+    location : str
+
+    Methods
+    -------
+    create_mapset()
+        Create a mapset in a GRASS GIS Database if it is not existent.
+
+    Examples
+    --------
+    The general usage is
+    ::
+        $ g.c.mapset [] mapset=string [dbase=string] [location=string] [--verbose] [--quiet]
+
+
+    Creation of a mapset within a GRASS GIS session
+    ::
+        $ g.c.mapset mapset=Goettingen
+
+
+    Creation of a mapset within another GRASS GIS database
+    ::
+        $ g.c.mapset mapset=Goettingen dbase=/home/user/grassdata/germany
+
+
+    By default, the shell continues to use the history for the old mapset. To change this behaviour the history
+    can be switched to record in the new mapset's history file as follows::
+        $ g.c.mapset mapset=Goettingen
+        history -w
+        history -r /"$GISDBASE/$LOCATION/$MAPSET"/.bash_history
+        HISTFILE=/"$GISDBASE/$LOCATION/$MAPSET"/.bash_history
+
+    Notes
+    -----
+    By default, the shell continues to use the history for the old mapset. To change this behaviour the history
+    look at the examples.
+    """
     def __init__(self, mapset, dbase=None, location=None):
-        """
-        Create a mapset in a GRASS GIS Database if it is not existent. This will changes the current working MAPSET,
-        LOCATION, or GISDBASE. This is a fairly radical maneuver to run mid-session, take care when running the GUI
-        at the same time.
-
-        In GRASS GIS their is a similar function (`g.mapset`). This function shortens the flags and creates directly
-        a new mapset if it is not existent.
-
-        Parameters
-        ----------
-        mapset : str
-            Name of mapset.
-        dbase : str, optional
-            Location of GRASS GIS database
-        mapset : str, optional
-            Name of the mapset that will be created.
-
-        Attributes
-        ----------
-        mapset : str
-        dbase : str
-        location : str
-
-        Methods
-        -------
-        create_mapset()
-            Create a mapset in a GRASS GIS Database if it is not existent.
-
-        Examples
-        --------
-        The general usage is::
-            $ g.c.mapset [] mapset=string [dbase=string] [location=string] [--verbose] [--quiet]
-
-        Creation of a mapset within a GRASS GIS session::
-            $ g.c.mapset mapset=Goettingen
-
-
-        Creation of a mapset within another GRASS GIS database::
-            $ g.c.mapset mapset=Goettingen dbase=/home/user/grassdata/germany
-
-
-        By default, the shell continues to use the history for the old mapset. To change this behaviour the history
-        can be switched to record in the new mapset's history file as follows::
-            $ g.c.mapset mapset=Goettingen
-            history -w
-            history -r /"$GISDBASE/$LOCATION/$MAPSET"/.bash_history
-            HISTFILE=/"$GISDBASE/$LOCATION/$MAPSET"/.bash_history
-
-        Notes
-        -----
-        By default, the shell continues to use the history for the old mapset. To change this behaviour the history
-        look at the examples.
-        """
 
         # Self Definitions ---------------------------------------------------------------------------------------------
         self.mapset = mapset

@@ -2,9 +2,9 @@
 
 ############################################################################
 #
-# MODULE:      i.fr.import
+# MODULE:      i.dr.import
 # AUTHOR(S):   Ismail Baris
-# PURPOSE:     Import pyroSAR dataset in a directory based on their metadata.
+# PURPOSE:     Import data into a mapset from a file with considering a certain pattern.
 #
 # COPYRIGHT:   (C) Ismail Baris and Nils von Norsinski
 #
@@ -14,12 +14,12 @@
 #
 #############################################################################
 
-"""
+
 #%Module
-#% description: Import pyroSAR datasets in a directory based on their metadata
+#% description: Import data into a mapset from a file with considering a certain pattern.
 #% keyword: imagery
 #% keyword: satellite
-#% keyword: pyrosar
+#% keyword: auxiliary
 #% keyword: import
 #%end
 
@@ -33,92 +33,19 @@
 
 # Filter Section -------------------------------------------------------------------------------------------------------
 #%option
-#% key: sensor
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Sensor.
+#% key: pattern
+#% description: The pattern of file names.
 #% guisection: Filter
 #%end
 
 #%option
-#% key: acquisition_mode
-#% required: no
+#% key: extension
 #% type: string
-#% multiple: yes
-#% description: Acquisition Mode.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: polarization
 #% required: no
-#% type: string
-#% multiple: yes
-#% description: Polarization.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: product
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Product.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: product
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Product.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: projection
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Projection.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: orbit
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Orbit.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: spacing
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Spacing.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: sample
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Sample.
-#% guisection: Filter
-#%end
-
-#%option
-#% key: lines
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Lines.
+#% multiple: no
+#% answer: ENVI
+#% options: ENVI, GEOTIFF
+#% description: Which extension should be considered?
 #% guisection: Filter
 #%end
 
@@ -170,22 +97,15 @@
 
 # Optional Section -----------------------------------------------------------------------------------------------------
 #%flag
-#% key: e
-#% description: Recursive
-#% guisection: Optional
-#%end
-
-#%flag
 #% key: p
 #% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
-"""
+
 
 import os
+import re
 import sys
-
-from pyroSAR.ancillary import find_datasets
 
 try:
     import grass.script as gs
@@ -200,121 +120,97 @@ except ImportError as e:
 
     raise ImportError("You must installed GRASS GIS to run this program.")
 
-__LOCAL__ = ['sensor', 'projection', 'orbit', 'polarizations', 'acquisition_mode',
-             'start', 'stop', 'product', 'spacing', 'samples', 'lines']
+
+class DirImport(object):
+    """
+    Import data into a mapset from a file with considering a certain pattern.
+
+    Parameters
+    ----------
+    input_dir : str
+        The directory where the files are located.
+    pattern : str, optional
+        The pattern of file names. If not specified all files with selected extension will be imported.
+    extension : {'ENVI', 'GEOTIFF'}, optional
+        Which extensions should be recognized? Default is 'GEOTIFF'
+
+    Attributes
+    ----------
+    input_dir : str
+    extension : str
+    filter_p : str
+        Combines pattern and extension.
+    files : list
+        All detected files.
+
+    Methods
+    -------
+    import_products(reproject=False, link=False)
+        Import detected files.
+    create_mapset(mapset, dbase=None, location=None)
+        Create a new mapset.
+    print_products()
+        Print all detected files.
+
+    Examples
+    --------
+    The general usage is
+    ::
+        $ i.dr.import [-r -l -c -p] input_dir=string [pattern=string] [extension=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
 
 
-class FinderImport(object):
-    def __init__(self, input_dir, recursive=False, sensor=None, projection=None, orbit=None, polarization=None,
-                 acquisition_mode=None, start=None, stop=None, product=None, spacing=None, sample=None,
-                 lines=None):
-
-        """
-        Import pyroSAR dataset in a directory based on their metadata.
-
-        Parameters
-        ----------
-        input_dir : str
-            The directory where the files are located.
-        recursive : bool, optional
-            Recursive search. Default is False.
-        sensor : str or tuple, optional
-            Sensor.
-        projection : str or tuple, optional
-            Projection.
-        orbit : str or tuple, optional
-            Orbit.
-        polarization : str or tuple, optional
-            Polarization.
-        acquisition_mode : str or tuple, optional
-            Acquisition_mode.
-        start : str or tuple, optional
-            Start.
-        stop : str or tuple, optional
-            Stop.
-        product : str or tuple, optional
-            Product.
-        spacing : str or tuple, optional
-            Spacing.
-        sample : str or tuple, optional
-            Sample.
-        lines : str or tuple, optional
-            Lines.
-
-        Attributes
-        ----------
-        input_dir : str
-        recursive : bool
-        kwargs : dict
-            Selected attributs (sensor, polarization etc.) in a dictionary.
-        files : list
-            All detected files.
-
-        Methods
-        -------
-        find_products()
-            Find all files that matches the input attributes.
-        import_products(reproject=False, link=False)
-            Import detected files.
-        create_mapset(mapset, dbase=None, location=None)
-            Create a new mapset.
-        print_products()
-            Print all detected files.
-
-        Examples
-        --------
-        The general usage is::
-            $ i.fr.import [-r -l -c -p -e] input_dir=string [*attributes=string] [mapset=string] [dbase=string] [location=string] [--verbose] [--quiet]
-
-        For *attributes the following parameters can be used::
-            >>> ['sensor', 'projection', 'orbit', 'polarizations', 'acquisition_mode', 'start', 'stop', 'product', 'spacing', 'samples', 'lines']
+    Import files that starts with 'S1' from a directory in current mapset and reproject it
+    ::
+        $ i.dr.import -r input_dir=/home/user/data pattern=S1.*
 
 
-        Import Sentinel 1A files with polarization VV and VH from a directory in current mapset and reproject it::
-            $ i.fr.import -r input_dir=/home/user/data sensor=SA1 polarization=VV, VH
+    Import files that starts with 'S1' from a directory in a new mapset and reproject it
+    ::
+        $ i.dr.import -c -r input_dir=/home/user/data pattern=S1.* mapset=Goettingen
 
+    Notes
+    -----
+    Note, it is important for the parameter `pattern`  that the asterisk('*') contains a dot (see examples).
 
-        Import Sentinel 1A and 1B files with polarization VV from a directory in a new mapset and reproject it::
-            $ i.fr.import -c -r input_dir=/home/user/data sensor=S1A, S1B polarization=VV mapset=Goettingen
+    **Flags:**
+        * r : Reproject raster data (using r.import if needed).
+        * l : Link raster data instead of importing.
+        * c : Create a new mapset.
+        * p : Print the detected files and exit.
 
-        Notes
-        -----
-        Flags:
-            * r : Reproject raster data (using r.import if needed).
-            * l : Link raster data instead of importing.
-            * c : Create a new mapset.
-            * p : Print the detected files and exit.
-            * e : Recursive search.
-
-        """
+    """
+    def __init__(self, input_dir, pattern=None, extension=None):
         # Initialize Directory -----------------------------------------------------------------------------------------
-        self.input_dir = input_dir
-        self.recursive = recursive
+        self._dir_list = []
 
-        # Initialize kwargs --------------------------------------------------------------------------------------------
-        input_parameter = [sensor, projection, orbit, polarization, acquisition_mode, start, stop, product, spacing,
-                           sample, lines]
-        self.kwargs = {}
+        if not os.path.exists(input_dir):
+            gs.fatal(_('Input directory <{0}> not exists').format(input_dir))
+        else:
+            self.input_dir = input_dir
 
-        for i, item in enumerate(input_parameter):
-            if item is not None:
-                self.kwargs[__LOCAL__[i]] = item
+        # Create Pattern and find files --------------------------------------------------------------------------------
+        if extension is not None:
+            self.extension = extension
+        else:
+            self.extension = '.tif*'
 
-        # Select Files -------------------------------------------------------------------------------------------------
-        self.files = self.find_products()
+        if pattern is not None:
+            filter_p = pattern + self.extension
+        else:
+            filter_p = '.*' + self.extension
+
+        self.filter_p = filter_p
+
+        gs.debug('Filter: {}'.format(filter_p), 1)
+        self.files = self.__filter(filter_p)
+
+        if self.files is []:
+            gs.message(_('No files detected. Note, that must be a point for * like: pattern = str.* '))
+            return
 
     # ------------------------------------------------------------------------------------------------------------------
     # Public Methods
     # ------------------------------------------------------------------------------------------------------------------
-    def find_products(self):
-        """
-        Find all files that matches the input attributes.
-        Returns
-        -------
-        list
-        """
-        return find_datasets(self.input_dir, self.recursive, **self.kwargs)
-
     def import_products(self, reproject=False, link=False):
         """
         Import detected files.
@@ -347,10 +243,7 @@ class FinderImport(object):
                         gs.fatal(_('Projection of dataset does not appear to match current location. '
                                    'Force reprojecting dataset by -r flag.'))
 
-                if os.path.exists(f):
-                    pass
-                else:
-                    self.__import_file(f, module, args)
+                self.__import_file(f, module, args)
 
     def create_mapset(self, mapset, dbase=None, location=None):
         """
@@ -369,7 +262,7 @@ class FinderImport(object):
         -------
         None
         """
-        module = 'g.mapset'
+        module = 'g.c.mapset'
         gs.run_command(module, mapset=mapset, dbase=dbase, location=location)
 
     def print_products(self):
@@ -388,6 +281,23 @@ class FinderImport(object):
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
     # ------------------------------------------------------------------------------------------------------------------
+    def __filter(self, filter_p):
+        pattern = re.compile(filter_p)
+        files = []
+        for rec in os.walk(self.input_dir):
+            if not rec[-1]:
+                continue
+
+            match = filter(pattern.match, rec[-1])
+            if match is None:
+                continue
+
+            for f in match:
+                if f.endswith(self.extension):
+                    files.append(os.path.join(rec[0], f))
+
+        return files
+
     def __check_projection(self, filename):
         try:
             with open(os.devnull) as null:
@@ -418,11 +328,8 @@ class FinderImport(object):
 
         return ret
 
-    def __import_file(self, filename, module, args, mapname=None):
-        if mapname is None:
-            mapname = os.path.splitext(os.path.basename(filename))[0]
-        else:
-            pass
+    def __import_file(self, filename, module, args):
+        mapname = os.path.splitext(os.path.basename(filename))[0]
 
         gs.message(_('Processing <{}>...').format(mapname))
 
@@ -462,19 +369,14 @@ def change_dict_value(dictionary, old_value, new_value):
 
 
 def main():
-    importer = FinderImport(options['input_dir'], recursive=flags['e'], sensor=options['sensor'],
-                            projection=options['projection'], orbit=options['orbit'],
-                            polarization=options['polarization'],
-                            acquisition_mode=options['acquisition_mode'], start=options['start'], stop=options['stop'],
-                            product=options['product'], spacing=options['spacing'], sample=options['sample'],
-                            lines=options['lines'])
+    importer = DirImport(options['input_dir'], pattern=options['pattern'], extension=options['extension'])
 
     if flags['p']:
         importer.print_products()
         return 0
 
     if flags['c']:
-        if options['mapset'] is None:
+        if options['mapset'] == '':
             raise ValueError("Please define a mapset.")
         else:
             importer.create_mapset(mapset=options['mapset'], dbase=options['dbase'], location=options['location'])
@@ -486,6 +388,9 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
+
     options = change_dict_value(options, '', None)
+    options = change_dict_value(options, 'ENVI', '.img')
+    options = change_dict_value(options, 'GEOTIFF', '.tif*')
 
     sys.exit(main())
