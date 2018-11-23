@@ -14,7 +14,7 @@
 #
 #############################################################################
 
-"""
+
 #%Module
 #% description: Import pyroSAR datasets in a directory based on their metadata
 #% keyword: imagery
@@ -180,7 +180,7 @@
 #% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
-"""
+
 
 import os
 import sys
