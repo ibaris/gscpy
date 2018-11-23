@@ -599,7 +599,7 @@ def main():
 
         for item in flag_list:
             if flags[item]:
-                flag += '-' + item
+                flag += item
             else:
                 pass
 
