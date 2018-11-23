@@ -12,6 +12,7 @@ Welcome to gscpy's documentation!
 
    introduction
    installation
+   example
    annex_technical
 
 Indices and tables

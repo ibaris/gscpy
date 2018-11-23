@@ -277,9 +277,16 @@ class CRegister(object):
     Create a mapset that named 'tempmean' and register all raster files that contains `tempmean`. Show a plot after
     registration
     ::
-        $ t.c.register -m output=tempmean temporaltype=absolute title="Average temperature"
+        $ t.c.register -m -t output=tempmean temporaltype=absolute title="Average temperature"
         description="Monthly temperature average in NC [deg C]" pattern="*tempmean" start=2000-01-01
         increment="1 months"
+
+    Create a mapset that named 'precip_sum' and register all raster files that contains `precip`. Show a plot after
+    registration
+    ::
+        $ t.c.register -m -t output=precip_sum title="Preciptation"
+        description="Monthly precipitation sums in NC [mm]" pattern="*precip" start=2000-01-01
+        increment="1 months" semantictype=sum
 
     Notes
     -----
@@ -362,6 +369,8 @@ class CRegister(object):
         self.__t_create()
         self.__t_register(t)
 
+        return 0
+
     def print_products(self):
         """
         Print all detected files.
@@ -373,6 +382,8 @@ class CRegister(object):
         for f in self.files:
             sys.stdout.write(
                 'Detected File <{0}> {1}'.format(str(f), os.linesep))
+
+        return 0
 
     def list(self):
         """
@@ -389,6 +400,8 @@ class CRegister(object):
         except CalledModuleError as e:
             pass
 
+        return 0
+
     def plot(self):
         """
         Visualize the temporal extents of the dataset.
@@ -402,6 +415,8 @@ class CRegister(object):
 
         except CalledModuleError as e:
             pass
+
+        return 0
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private Methods
@@ -438,6 +453,8 @@ class CRegister(object):
         except CalledModuleError as e:
             pass
 
+        return 0
+
     def __t_register(self, t=False):
         module = 't.register'
         if t:
@@ -450,6 +467,8 @@ class CRegister(object):
 
         except CalledModuleError as e:
             pass
+
+        return 0
 
     def __list_files(self, i=False, r=False, e=False, t=False, m=False, f=False):
         module = "g.list"
@@ -467,6 +486,7 @@ class CRegister(object):
         except CalledModuleError as e:
             pass
 
+        return 0
 
 def change_dict_value(dictionary, old_value, new_value):
     """
