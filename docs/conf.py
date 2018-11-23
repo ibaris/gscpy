@@ -54,8 +54,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'sphinxcontrib.bibtex'
+    'sphinx.ext.napoleon'
 ]
 
 napoleon_google_docstring = False
