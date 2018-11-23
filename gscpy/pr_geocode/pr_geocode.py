@@ -40,6 +40,7 @@
 #%option
 #% key: t_srs
 #% required: no
+#% type: integer
 #% multiple: no
 #% description: A target geographic reference system in EPSG:
 #%guisection: Input
