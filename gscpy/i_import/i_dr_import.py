@@ -43,8 +43,8 @@
 #% type: string
 #% required: no
 #% multiple: no
-#% answer: ENVI
-#% options: ENVI, GEOTIFF
+#% answer: .tif
+#% options: .tif, .tiff, .img
 #% description: Which extension should be considered?
 #% guisection: Filter
 #%end
@@ -192,7 +192,7 @@ class DirImport(object):
         if extension is not None:
             self.extension = extension
         else:
-            self.extension = '.tif*'
+            self.extension = '.tif'
 
         if pattern is not None:
             filter_p = pattern + self.extension
@@ -293,6 +293,7 @@ class DirImport(object):
                 continue
 
             for f in match:
+
                 if f.endswith(self.extension):
                     files.append(os.path.join(rec[0], f))
 
@@ -388,9 +389,6 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
-
     options = change_dict_value(options, '', None)
-    options = change_dict_value(options, 'ENVI', '.img')
-    options = change_dict_value(options, 'GEOTIFF', '.tif*')
 
     sys.exit(main())
