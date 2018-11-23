@@ -19,8 +19,7 @@
 <p align="center">
   <a href="#description">Description</a> •
   <a href="#installation">Installation</a> •
-  <a href="#example">Example</a> •
-    <a href="#documentation">Doumentation</a> •
+  <a href="#documentation">Doumentation</a> •
   <a href="#authors">Author</a> •
   <a href="#acknowledgments">Acknowledgments</a>
 </p>
@@ -39,40 +38,41 @@ use this module to search for newly processed files and import them into a datab
 
 
 Here is an overview of the content:
-    * A simple module that import Scripts from a package to GRASS GIS script directory.
-    * Database management modules where one can create entire databases or mapsets.
-    * Data download including basic adjustments for Sentinel-1 with <a href="https://github.com/sentinelsat/sentinelsat"> sentinelsat</a>.
-    * A SAR pre-processing add-on for GRASS GIS based on SNAP processing workflow which uses <a href="https://github.com/johntruckenbrodt/pyroSAR"> pyroSAR</a>.
-    * Modules to import all files in a directory with considering a certain pattern.  Moreover, it is possible to import
+* A simple module that import Scripts from a package to GRASS GIS script directory.
+* Database management modules where one can create entire databases or mapsets.
+* Data download including basic adjustments for Sentinel-1 with <a href="https://github.com/sentinelsat/sentinelsat"> sentinelsat</a>.
+* A SAR pre-processing add-on for GRASS GIS based on SNAP processing workflow which uses <a href="https://github.com/johntruckenbrodt/pyroSAR"> pyroSAR</a>.
+* Modules to import all files in a directory with considering a certain pattern.  Moreover, it is possible to import
       these data in different ``mapsets``.
-    * Module that can import ``pyroSAR`` dataset in a directory based on their metadata.
-    * Creation of Sentinel-1 space-time cube.
-    * Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
+* Module that can import ``pyroSAR`` dataset in a directory based on their metadata.
+* Creation of Sentinel-1 space-time cube.
+* Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
 
 The package <a href="https://github.com/johntruckenbrodt/pyroSAR"> pyroSAR</a> and <a href="https://github.com/sentinelsat/sentinelsat"> sentinelsat</a> is used for the pre-processing and download of sentinel data respectively.
 
 ## Modules
 This packages include the following modules:
-    * i.script: A simple module that import Scripts from a package to GRASS GIS script directory.
-    * g.database: Create a GRASS GIS Database.
-    * g.c.mapset: Create a mapset in a GRASS GIS Database if it is not existent.
-    * s1.download: Data download including basic adjustments for Sentinel-1 with <a href="https://github.com/sentinelsat/sentinelsat"> sentinelsat</a>.
-    * i.dr.import: Import data into a mapset from a file with considering a certain pattern.
-    * i.fr.import: Import pyroSAR dataset in a directory based on their metadata.
-    * pr.geocode: Wrapper function for geocoding SAR images using <a href="https://github.com/johntruckenbrodt/pyroSAR"> pyroSAR</a>.
-    * c.std.create: Creation of Sentinel-1 space-time cube.
-    * a.analyse: Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
+* i.script: A simple module that import Scripts from a package to GRASS GIS script directory.
+* g.database: Create a GRASS GIS Database.
+* g.c.mapset: Create a mapset in a GRASS GIS Database if it is not existent.
+* s1.download: Data download including basic adjustments for Sentinel-1 with <a href="https://github.com/sentinelsat/sentinelsat"> sentinelsat</a>.
+* i.dr.import: Import data into a mapset from a file with considering a certain pattern.
+* i.fr.import: Import pyroSAR dataset in a directory based on their metadata.
+* pr.geocode: Wrapper function for geocoding SAR images using <a href="https://github.com/johntruckenbrodt/pyroSAR"> pyroSAR</a>.
+* c.std.create: Creation of Sentinel-1 space-time cube.
+* a.analyse: Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
 
 # Installation
-After you have received the `gscpy` package, you can install it with
-::
+After you have received the `gscpy` package, you can install it with::
+
     $ python setup.py install
 
-After this process it is advantageous to use the script ``i_script`` with GRASS GIS. This is necessary because some
+After this process it is advantageous to use the script `i_script` with GRASS GIS. This is necessary because some
 modules from this package call other modules from this package that are only present if they are located in the
 script folder of GRASS GIS. It is possible that some of these modules require administration rights. The reason for
 this is that, for example, when downloading data to the hard disk, any write permissions must be present. Thus,
-here the launch process is proceeded with ``sudo``::
+here the launch process is proceeded with `sudo`::
+
     $ sudo grass
 
 To launch a Python script from GUI, use File -> Launch Python script and select /path/to/gscpy/i_script.py.
