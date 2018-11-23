@@ -14,7 +14,7 @@
 #
 #############################################################################
 
-"""
+
 #%module
 #% description: Create a GRASS GIS Database.
 #% keyword: auxiliary
@@ -63,7 +63,7 @@
 #% description: Launch mapset with GRASS GIS
 #% guisection: Optional
 #%end
-"""
+
 
 import os
 import re
@@ -77,66 +77,71 @@ except ImportError:
 
 
 class Database(object):
-    def __init__(self, db_dir, db_name, t_srs=None, t_srs_from_file=None, launch=False):
-        """
+    """
+    Create a GRASS GIS Database.
+
+    Create a new location, including it's default PERMANENT mapset, with or
+    without entering the new location.
+
+    Parameters
+    ----------
+    db_dir : str
+        Location of GRASS GIS database
+    db_name : str
+        Name of the database.
+    t_srs : int, optional
+        A EPSG Code for georeferencing purposes.
+    t_srs_from_file : str, optional
+        If t_srs is not used, a georeferenced file can be here uploaded.
+    launch : bool, optional
+        If True, GRASS GIS will start with the new created mapset.
+
+    Attributes
+    ----------
+    db_dir : str
+    db_name : str
+    t_srs : str or NoneType
+    t_srs_from_file : str or NoneType
+    launch : bool
+
+    Methods
+    -------
+    create_database()
         Create a GRASS GIS Database.
 
-        Create a new location, including it's default PERMANENT mapset, with or
-        without entering the new location.
-
-        Parameters
-        ----------
-        db_dir : str
-            Location of GRASS GIS database
-        db_name : str
-            Name of the database.
-        t_srs : int, optional
-            A EPSG Code for georeferencing purposes.
-        t_srs_from_file : str, optional
-            If t_srs is not used, a georeferenced file can be here uploaded.
-        launch : bool, optional
-            If True, GRASS GIS will start with the new created mapset.
-
-        Attributes
-        ----------
-        db_dir : str
-        db_name : str
-        t_srs : str or NoneType
-        t_srs_from_file : str or NoneType
-        launch : bool
-
-        Methods
-        -------
-        create_database()
-            Create a GRASS GIS Database.
-
-        Examples
-        --------
-         The general usage is::
-            $ g.database [-l] db_dir=string db_name=string [t_srs=integer] [t_srs_from_file=string] [--verbose] [--quiet]
-
-        Create a new location, including it's default PERMANENT mapset, without entering the new location using
-        a EPSG code::
-            $ g.database db_dir=/home/user/grassdata db_name=germany t_srs=32630
-
-        Create a new location, including it's default PERMANENT mapset, without entering the new location using
-        a georeferenced raster file::
-            $ g.database db_dir=/home/user/grassdata db_name=germany t_srs_from_file=myFile.tiff
+    Examples
+    --------
+    The general usage is
+    ::
+        $ g.database [-l] db_dir=string db_name=string [t_srs=integer] [t_srs_from_file=string] [--verbose] [--quiet]
 
 
-        Create new mapset within the new location and launch GRASS GIS within that mapset::
-            $ g.database -l db_dir=/home/user/grassdata db_name=germany t_srs=32630
+    Create a new location, including it's default PERMANENT mapset, without entering the new location using
+    a EPSG code::
+        $ g.database db_dir=/home/user/grassdata db_name=germany t_srs=32630
 
-        Notes
-        -----
-        It is mandatory that t_srs OR t_srs_from_file is set.
 
-        This class try to find ['grass70', 'grass71', 'grass72', 'grass73', 'grass74'] commands. The list can be
-        easily expand to another versions of GRASS GIS.
+    Create a new location, including it's default PERMANENT mapset, without entering the new location using
+    a georeferenced raster file::
+        $ g.database db_dir=/home/user/grassdata db_name=germany t_srs_from_file=myFile.tiff
 
-        Flags:
-            * l : Launch mapset with GRASS GIS.
-        """
+
+    Create new mapset within the new location and launch GRASS GIS within that mapset
+    ::
+        $ g.database -l db_dir=/home/user/grassdata db_name=germany t_srs=32630
+
+    Notes
+    -----
+    It is mandatory that t_srs OR t_srs_from_file is set.
+
+    This class try to find `['grass70', 'grass71', 'grass72', 'grass73', 'grass74']` commands. The list can be
+    easily expand to another versions of GRASS GIS.
+
+    **Flags:**
+        * l : Launch mapset with GRASS GIS.
+    """
+
+    def __init__(self, db_dir, db_name, t_srs=None, t_srs_from_file=None, launch=False):
 
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------
         self.candidates = ['grass70', 'grass71', 'grass72', 'grass73', 'grass74']
