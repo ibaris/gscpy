@@ -208,7 +208,6 @@ class S1Download(object):
     **Flags:**
         * p : Print the detected files and exit.
     """
-
     def __init__(self, username, password, region, timestart, timeend, outdir, producttype=None, polarisationmode=None,
                  sensoroperationalmode=None, orbitnumber=None, orbitdirection=None):
 
