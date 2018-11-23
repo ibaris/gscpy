@@ -15,8 +15,7 @@ Here is an overview of the content:
     * Modules to import all files in a directory with considering a certain pattern.  Moreover, it is possible to import
       these data in different ``mapsets``.
     * Module that can import ``pyroSAR`` dataset in a directory based on their metadata.
-    * Creation of Sentinel-1 space-time cube.
-    * Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
+    * Creation of space-time cube.
 
 The package `pyroSAR`_ and `sentinelsat`_ is used for the pre-processing and download of sentinel data respectively.
 
@@ -30,8 +29,7 @@ This packages include the following modules:
     * i.dr.import: Import data into a mapset from a file with considering a certain pattern.
     * i.fr.import: Import pyroSAR dataset in a directory based on their metadata.
     * pr.geocode: Wrapper function for geocoding SAR images using `pyroSAR`_.
-    * c.std.create: Creation of Sentinel-1 space-time cube.
-    * a.analyse: Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
+    * t.c.register: Creation of Sentinel-1 space-time cube.
 
 .. _pyroSAR: https://github.com/johntruckenbrodt/pyroSAR
 .. _sentinelsat: https://github.com/sentinelsat/sentinelsat
