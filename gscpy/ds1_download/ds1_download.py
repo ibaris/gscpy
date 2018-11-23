@@ -239,7 +239,7 @@ class S1Download(object):
 
         self.date = (timestart_temp, timeend_temp)
 
-        # Subsection3 --------------------------------------------------------------------------------------------------
+        # Initialize Attributes ----------------------------------------------------------------------------------------
         input_parameter = [producttype, polarisationmode, sensoroperationalmode, orbitnumber, orbitdirection]
         __KEYS__ = ["producttype", "polarisationmode", "sensoroperationalmode", "orbitnumber", "orbitdirection"]
 
