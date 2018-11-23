@@ -14,7 +14,7 @@
 #
 #############################################################################
 
-"""
+
 #%Module
 #% description: Exports GRASS raster maps from a selection into GDAL supported formats.
 #% keyword: raster
@@ -66,8 +66,6 @@
 #% guisection: Input
 #%end
 
-nodata=None, prefix=True
-
 # Output Section -------------------------------------------------------------------------------------------------------
 #%option G_OPT_M_DIR
 #% key: outdir
@@ -117,7 +115,7 @@ nodata=None, prefix=True
 #% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
-"""
+
 
 import os
 import sys

@@ -10,9 +10,10 @@ Contents:
    import_script
    database
    download
+   pre_process
    import
    export
-   pre_process
+   register
 
 Indices and tables
 ------------------
