@@ -13,7 +13,7 @@
 #               comes with GRASS for details.
 #
 #############################################################################
-"""
+
 #%module
 #% description: Create and register a space time dataset
 #% keyword: temporal
@@ -180,7 +180,7 @@
 #% description: Plot files after registration.
 #% guisection: Optional
 #%end
-"""
+
 
 import os
 import sys
