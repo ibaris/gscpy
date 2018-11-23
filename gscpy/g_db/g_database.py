@@ -91,7 +91,7 @@ class Database(object):
         Name of the database.
     t_srs : int, optional
         A EPSG Code for georeferencing purposes.
-    t_srs_from_file : str, optional
+    t_srs_file : str, optional
         If t_srs is not used, a georeferenced file can be here uploaded.
     launch : bool, optional
         If True, GRASS GIS will start with the new created mapset.
@@ -101,7 +101,7 @@ class Database(object):
     db_dir : str
     db_name : str
     t_srs : str or NoneType
-    t_srs_from_file : str or NoneType
+    t_srs_file : str or NoneType
     launch : bool
 
     Methods
@@ -113,7 +113,7 @@ class Database(object):
     --------
     The general usage is
     ::
-        $ g.database [-l] db_dir=string db_name=string [t_srs=integer] [t_srs_from_file=string] [--verbose] [--quiet]
+        $ g.database [-l] db_dir=string db_name=string [t_srs=integer] [t_srs_file=string] [--verbose] [--quiet]
 
 
     Create a new location, including it's default PERMANENT mapset, without entering the new location using
@@ -123,7 +123,7 @@ class Database(object):
 
     Create a new location, including it's default PERMANENT mapset, without entering the new location using
     a georeferenced raster file::
-        $ g.database db_dir=/home/user/grassdata db_name=germany t_srs_from_file=myFile.tiff
+        $ g.database db_dir=/home/user/grassdata db_name=germany t_srs_file=myFile.tiff
 
 
     Create new mapset within the new location and launch GRASS GIS within that mapset
@@ -132,7 +132,7 @@ class Database(object):
 
     Notes
     -----
-    It is mandatory that t_srs OR t_srs_from_file is set.
+    It is mandatory that t_srs OR t_srs_file is set.
 
     This class try to find `['grass70', 'grass71', 'grass72', 'grass73', 'grass74']` commands. The list can be
     easily expand to another versions of GRASS GIS.
@@ -141,17 +141,17 @@ class Database(object):
         * l : Launch mapset with GRASS GIS.
     """
 
-    def __init__(self, db_dir, db_name, t_srs=None, t_srs_from_file=None, launch=False):
+    def __init__(self, db_dir, db_name, t_srs=None, t_srs_file=None, launch=False):
 
         # Define GRASS GIS Versions ------------------------------------------------------------------------------------
         self.candidates = ['grass70', 'grass71', 'grass72', 'grass73', 'grass74']
 
         # Check Georeference -------------------------------------------------------------------------------------------
-        if t_srs is None and t_srs_from_file is None:
-            raise ValueError("A EPSG code (t_srs) or a geocoded file (t_srs_from_file) must be defined.")
+        if t_srs is None and t_srs_file is None:
+            raise ValueError("A EPSG code (t_srs) or a geocoded file (t_srs_file) must be defined.")
 
-        elif t_srs is not None and t_srs_from_file is not None:
-            raise ValueError("Parameter t_srs AND A t_srs_from_file are defined. EPSG code OR a geocoded "
+        elif t_srs is not None and t_srs_file is not None:
+            raise ValueError("Parameter t_srs AND A t_srs_file are defined. EPSG code OR a geocoded "
                              "file must be defined.")
         else:
             if t_srs is not None:
@@ -159,15 +159,15 @@ class Database(object):
             else:
                 self.t_srs = None
 
-            if t_srs_from_file is not None:
-                if not os.path.exists(t_srs_from_file):
-                    raise ValueError("File <{0}> does not exist".format(t_srs_from_file))
+            if t_srs_file is not None:
+                if not os.path.exists(t_srs_file):
+                    raise ValueError("File <{0}> does not exist".format(t_srs_file))
 
                 else:
-                    self.t_srs_from_file = t_srs_from_file
+                    self.t_srs_file = t_srs_file
 
             else:
-                self.t_srs_from_file = None
+                self.t_srs_file = None
 
         # Check Input Directory ----------------------------------------------------------------------------------------
         self.db_name = db_name
@@ -221,9 +221,9 @@ class Database(object):
 
         else:
             if self.launch:
-                startcmd = [grass_version, '-c', self.t_srs_from_file, self.dir]
+                startcmd = [grass_version, '-c', self.t_srs_file, self.dir]
             else:
-                startcmd = [grass_version, '-e', '-c', self.t_srs_from_file, self.dir]
+                startcmd = [grass_version, '-e', '-c', self.t_srs_file, self.dir]
 
         return startcmd
 
@@ -254,7 +254,7 @@ def change_dict_value(dictionary, old_value, new_value):
 
 def main():
     creator = Database(db_dir=options['db_dir'], db_name=options['db_name'],
-                       t_srs_from_file=options['t_srs_from_file'], t_srs=options['t_srs'],
+                       t_srs_file=options['t_srs_file'], t_srs=options['t_srs'],
                        launch=flags['l'])
 
     creator.create_database()
