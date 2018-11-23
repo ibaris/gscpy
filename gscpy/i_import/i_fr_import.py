@@ -14,7 +14,7 @@
 #
 #############################################################################
 
-
+"""
 #%Module
 #% description: Import pyroSAR datasets in a directory based on their metadata
 #% keyword: imagery
@@ -180,7 +180,7 @@
 #% description: Print the detected files and exit.
 #% guisection: Optional
 #%end
-
+"""
 
 import os
 import sys
@@ -288,6 +288,7 @@ class FinderImport(object):
         * e : Recursive search.
 
     """
+
     def __init__(self, input_dir, recursive=False, sensor=None, projection=None, orbit=None, polarization=None,
                  acquisition_mode=None, start=None, stop=None, product=None, spacing=None, sample=None,
                  lines=None):
@@ -466,6 +467,32 @@ def change_dict_value(dictionary, old_value, new_value):
     return dictionary
 
 
+def tuple_multi_string(dictionary, sep=','):
+    """
+    Convert values like 'a, b' to ('a', 'b').
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary.
+    sep : str
+        Seperator
+
+    Returns
+    -------
+    dict
+    """
+    for key, value in dictionary.items():
+        value_split = value.split(sep)
+
+        if len(value_split) == 1 or len(value_split) == 0:
+            pass
+        else:
+            dictionary[key] = tuple(value_split)
+
+    return dictionary
+
+
 def main():
     importer = FinderImport(options['input_dir'], recursive=flags['e'], sensor=options['sensor'],
                             projection=options['projection'], orbit=options['orbit'],
@@ -491,6 +518,7 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
+    options = tuple_multi_string(dict)
     options = change_dict_value(options, '', None)
 
     sys.exit(main())
