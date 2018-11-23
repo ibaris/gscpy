@@ -28,6 +28,7 @@ Contents
    t_c_register_example
    pre_process
    import
+   i_dr_input_example
    export
    register
 

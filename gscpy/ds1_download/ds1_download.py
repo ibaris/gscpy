@@ -187,7 +187,7 @@ class S1Download(object):
     --------
     The general usage is
     ::
-        $ i.fr.import [-p] username=string password=string region=string timestart=string timeend=string outdir=sting
+        $ ds1.download [-p] username=string password=string region=string timestart=string timeend=string outdir=sting
         [*attributes=string] [--verbose] [--quiet]
 
     For *attributes the following parameters can be used
@@ -195,13 +195,13 @@ class S1Download(object):
         >>> ["producttype", "polarisationmode", "sensoroperationalmode", "orbitnumber", "orbitdirection"]
 
     Print all Sentinel 1 data with product type GRD between 2015-01-02 and 2015-01-12::
-        $ i.fr.import -p username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart='2015-01-02'
-        timeend='2015-01-12 outdir='home/usr/data' producttype=SLC
+        $ ds1.download -p username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart=2015-01-02
+        timeend=2015-01-12 outdir='home/usr/data' producttype=SLC
 
     Download the last query
     ::
-        $ i.fr.import username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart='2015-01-02'
-        timeend='2015-01-12 outdir='home/usr/data' producttype=SLC
+        $ ds1.download username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart=2015-01-02
+        timeend=2015-01-12 outdir='home/usr/data' producttype=SLC
 
     Notes
     -----
@@ -350,6 +350,7 @@ if __name__ == "__main__":
     options, flags = gs.parser()
     options = tuple_multi_string(options)
     options = change_dict_value(options, '', None)
+    options = change_dict_value(options, 'ALL', None)
     options = change_dict_value(options, 'All', None)
 
     sys.exit(main())
