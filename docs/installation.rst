@@ -20,5 +20,6 @@ Now you can launch the following modules:
     * s1.download: Data download including basic adjustments for Sentinel-1 with `sentinelsat`_.
     * i.dr.import: Import data into a mapset from a file with considering a certain pattern.
     * i.fr.import: Import pyroSAR dataset in a directory based on their metadata.
+    * pr.geocode: Wrapper function for geocoding SAR images using `pyroSAR`_.
     * c.std.create: Creation of Sentinel-1 space-time cube.
     * a.analyse: Multi-temporal analysis using t.rast.mapcalc or t.rast.algebra.
