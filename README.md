@@ -5,7 +5,7 @@
   GSCPY
   <br>
 </h1>
-<h4 align="center">Sentinel-1 SAR Pre-Processing in GRASS GIS </h4>
+<h4 align="center">Sentinel-1 Pre-Processing in GRASS GIS </h4>
 
 <p align="center">
   <a href="http://forthebadge.com">
