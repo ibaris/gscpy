@@ -23,3 +23,5 @@ Now you can launch the following modules:
     * pr.geocode: Wrapper function for geocoding SAR images using `pyroSAR`_.
     * t.c.register: Creation of Sentinel-1 space-time cube.
 
+.. _pyroSAR: https://github.com/johntruckenbrodt/pyroSAR
+.. _sentinelsat: https://github.com/sentinelsat/sentinelsat
