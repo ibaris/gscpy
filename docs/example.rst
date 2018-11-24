@@ -24,10 +24,7 @@ Contents
    :titlesonly:
 
    g_c_mapset_example
+   dsi_download_example
    i_dr_input_example
    t_c_register_example
-   pre_process
-   import
-   i_dr_input_example
-   export
-   register
+
