@@ -31,10 +31,3 @@ Contents
    i_dr_input_example
    export
    register
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
