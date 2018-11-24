@@ -16,9 +16,6 @@ the whole North Carolina from `State Climate Office of North Carolina`_.
 .. _here: http://fatra.cnr.ncsu.edu/temporal-grass-workshop/NC_spm_temporal_workshop.zip
 .. _State Climate Office of North Carolina: http://convection.meas.ncsu.edu:8080/thredds/catalog/catalog.html
 
-Contents
---------
-
 .. toctree::
    :maxdepth: 2
    :titlesonly:
