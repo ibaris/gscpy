@@ -89,7 +89,7 @@ You can find the full documentation <a href="https://gscpy.readthedocs.io/en/lat
 * **Ismail Baris** - *Initial work* - (i.baris@outlook.de)
 * **Nils v. Norsinski**
 
-## Acknowledgments
+# Acknowledgments
 *  <a href="https://github.com/johntruckenbrodt">John Truckenbrodt </a>
 
 ---
