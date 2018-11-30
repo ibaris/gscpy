@@ -2,8 +2,8 @@ Pre-Processing Related Modules
 -------------------------------
 Wrapper function for geocoding SAR images using `pyroSAR`_:
 
-    | The pyroSAR package aims at providing a complete solution for the scalable organization and processing of SAR
-    | satellite data:
+    | The purpose of the pyroSAR package is to provide a complete solution for the scalable organization and
+    | processing of SAR satellite data:
     |
     | * Reading of data from various past and present satellite missions
     | * Handling of acquisition metadata
