@@ -233,14 +233,14 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 try:
     from osgeo import gdal, osr
 except ImportError as e:
     gs.fatal(_("Parameter t_srs_from_file requires GDAL library: {}").format(e))
 
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 
 class Geocode(object):
@@ -323,7 +323,7 @@ class Geocode(object):
      Otherwise the results are first written to a folder containing ENVI files and then transformed to GeoTiff files
      (one for each polarization).
      If GeoTiff would directly be selected as output format for multiple polarizations then a multilayer GeoTiff
-     is written by SNAP which is considered an unfavorable format
+     is written by SNAP which is an unfavorable format
 
      Notes
      -----

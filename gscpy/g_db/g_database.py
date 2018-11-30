@@ -73,7 +73,7 @@ import sys
 try:
     import grass.script as gs
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 
 class Database(object):
@@ -134,8 +134,8 @@ class Database(object):
     -----
     It is mandatory that t_srs OR t_srs_file is set.
 
-    This class try to find `['grass70', 'grass71', 'grass72', 'grass73', 'grass74']` commands. The list can be
-    easily expand to another versions of GRASS GIS.
+    This class trys to find `['grass70', 'grass71', 'grass72', 'grass73', 'grass74']` commands. This list can
+    easily be extended for other versions of GRASS GIS.
 
     **Flags:**
         * l : Launch mapset with GRASS GIS.

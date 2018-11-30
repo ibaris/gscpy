@@ -1,6 +1,6 @@
 Sentinel 1 Downloader
 ---------------------
-Here is an example how to use the sentinel downloader to map all available data `(flag: -p)`::
+Here is an example of how to use the Sentinel downloader, to map all available data `(flag: -p)`::
 
     $ ds1.download -p username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart=2015-01-02
       timeend=2015-01-12 outdir='home/usr/data' producttype=SLC
@@ -14,7 +14,7 @@ Type your Username and Password:
    :alt: Create a Mapset
    :align: center
 
-After the definition of a region with a geojson file one can specify the sensing period and the polarization and the
+After the definition of a region with a geojson file you can specify the sensing period, polarization and the
 product type:
 
 .. image:: _static/ds1_download_1.png
@@ -32,7 +32,7 @@ product type:
    :alt: Create a Mapset
    :align: center
 
-With `flag -p` one can print all available products. If the flag is missing the data will be downloaded:
+With `flag -p` you can print all available products. If the flag is missing all data will be downloaded:
 
 .. image:: _static/ds1_download_4.png
    :scale: 50 %

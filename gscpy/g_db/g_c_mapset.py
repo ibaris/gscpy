@@ -56,16 +56,16 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 
 class Mapset(object):
     """
     Create a mapset in a GRASS GIS Database if it is not existent. This will changes the current working MAPSET,
-    LOCATION, or GISDBASE. This is a fairly radical maneuver to run mid-session, take care when running the GUI
+    LOCATION, or GISDBASE. This is a fairly radical action to run mid-session, take care when running the GUI
     at the same time.
 
-    In GRASS GIS their is a similar function (`g.mapset`). This function shortens the flags and creates directly
+    In GRASS GIS there is a similar function (`g.mapset`). This function shortens the flags and creates directly
     a new mapset if it is not existent.
 
     Parameters
