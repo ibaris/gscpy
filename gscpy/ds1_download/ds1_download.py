@@ -129,14 +129,14 @@ import sys
 try:
     import grass.script as gs
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 from sentinelsat.sentinel import SentinelAPI, read_geojson, geojson_to_wkt
 
 
 class S1Download(object):
     """
-    This module makes searching, downloading and retrieving the metadata of Sentinel satellite images from the
+    This module makes searching, downloading and retrieving metadata of Sentinel-1 satellite images from the
     Copernicus Open Access Hub easy.
 
     Parameters
@@ -195,12 +195,12 @@ class S1Download(object):
         >>> ["producttype", "polarisationmode", "sensoroperationalmode", "orbitnumber", "orbitdirection"]
 
     Print all Sentinel 1 data with product type GRD between 2015-01-02 and 2015-01-12::
-        $ ds1.download -p username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart=2015-01-02
+        $ ds1.download -p username=USER password=PASSWORD region=myGEoJsOnFile.geojson timestart=2015-01-02
         timeend=2015-01-12 outdir='home/usr/data' producttype=SLC
 
     Download the last query
     ::
-        $ ds1.download username=DALEK password=exterminate region=myGEoJsOnFile.geojson timestart=2015-01-02
+        $ ds1.download username=USER password=PASSWORD region=myGEoJsOnFile.geojson timestart=2015-01-02
         timeend=2015-01-12 outdir='home/usr/data' producttype=SLC
 
     Notes
