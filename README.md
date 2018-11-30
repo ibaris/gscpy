@@ -1,8 +1,11 @@
 <h1 align="center">
   <br>
   <a href="https://gscpy.readthedocs.io/en/latest/#"><img src="https://i.imgur.com/uShXZIF.png" alt="GSCPY" width="400"></a>
+  <br>
+  GSCPY
+  <br>
 </h1>
-<h4 align="center">Sentinel-1 SAR Pre-Processing in GRASS GIS </h4>
+<h4 align="center">Sentinel-1 Pre-Processing in GRASS GIS </h4>
 
 <p align="center">
   <a href="http://forthebadge.com">
@@ -86,7 +89,7 @@ You can find the full documentation <a href="https://gscpy.readthedocs.io/en/lat
 * **Ismail Baris** - *Initial work* - (i.baris@outlook.de)
 * **Nils v. Norsinski**
 
-## Acknowledgments
+# Acknowledgments
 *  <a href="https://github.com/johntruckenbrodt">John Truckenbrodt </a>
 
 ---

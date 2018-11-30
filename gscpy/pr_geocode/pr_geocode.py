@@ -422,9 +422,8 @@ class Geocode(object):
         None
         """
         for infile in self.files:
-            if self.verbose:
-                sys.stdout.write('Start Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
-                sys.stdout.write('Start Processing File: <{0}> {1}'.format(str(os.path.basename(infile)), os.linesep))
+            sys.stdout.write('Start Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
+            sys.stdout.write('Start Processing File: <{0}> {1}'.format(str(os.path.basename(infile)), os.linesep))
 
             geocode(infile, self.outdir, t_srs=self.t_srs, tr=self.resolution_value, polarizations=self.polarizations,
                     shapefile=self.shapefile, scaling=self.scaling, geocoding_type=self.geocoding_type,
@@ -432,9 +431,8 @@ class Geocode(object):
                     externalDEMFile=self.external_dem_file, externalDEMNoDataValue=self.external_dem_nan,
                     externalDEMApplyEGM=self.externalDEMApplyEGM, test=self.test)
 
-            if self.verbose:
-                sys.stdout.write('End Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
-                sys.stdout.flush()
+            sys.stdout.write('End Time: {0} ----'.format(dt.datetime.utcnow().__str__()))
+            sys.stdout.flush()
 
     def import_products(self, pattern=None, mapset=None, dbase=None, location=None, flags=None):
         """
@@ -560,6 +558,11 @@ def change_dict_value(dictionary, old_value, new_value):
 
 
 def main():
+    if options['t_srs'] is None:
+        options['t_srs'] = 4326
+    else:
+        options['t_srs'] = int(options['t_srs'])
+
     if options['resolution_value'] is None:
         options['resolution_value'] = 20
 
@@ -611,5 +614,4 @@ def main():
 if __name__ == "__main__":
     options, flags = gs.parser()
     options = change_dict_value(options, '', None)
-
     sys.exit(main())

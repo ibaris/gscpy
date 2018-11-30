@@ -6,6 +6,7 @@ examples are from `FOSS4G 2014 workshop`_
 
 .. _FOSS4G 2014 workshop: http://ncsu-geoforall-lab.github.io/grass-temporal-workshop/
 
+
 Data
 ----
 These data are from `here`_. These data are already in a GRASS GIS database. To show the import routines I exported the
@@ -19,22 +20,14 @@ for North Carolina from `State Climate Office of North Carolina`_.
 Contents
 --------
 
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
 
+   data
    g_c_mapset_example
+   ds1_download_example
    i_dr_input_example
    t_c_register_example
-   pre_process
-   import
-   i_dr_input_example
-   export
-   register
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
