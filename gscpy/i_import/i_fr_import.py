@@ -69,15 +69,6 @@
 #%end
 
 #%option
-#% key: product
-#% required: no
-#% type: string
-#% multiple: yes
-#% description: Product.
-#% guisection: Filter
-#%end
-
-#%option
 #% key: projection
 #% required: no
 #% type: string
@@ -122,17 +113,23 @@
 #% guisection: Filter
 #%end
 
-# Settings Section -----------------------------------------------------------------------------------------------------
-#%flag
-#% key: r
-#% description: Reproject raster data (using r.import if needed).
-#% guisection: Settings
+# Date Section -----------------------------------------------------------------------------------------------------
+#%option
+#% key: start
+#% required: no
+#% type: string
+#% multiple: no
+#% description: Start Time.
+#% guisection: Date
 #%end
 
-#%flag
-#% key: l
-#% description: Link raster data instead of importing.
-#% guisection: Settings
+#%option
+#% key: stop
+#% required: no
+#% type: string
+#% multiple: no
+#% description: End Time.
+#% guisection: Date
 #%end
 
 # Mapset Section -------------------------------------------------------------------------------------------------------
@@ -181,6 +178,18 @@
 #% guisection: Optional
 #%end
 
+#%flag
+#% key: r
+#% description: Reproject raster data (using r.import if needed).
+#% guisection: Optional
+#%end
+
+#%flag
+#% key: l
+#% description: Link raster data instead of importing.
+#% guisection: Optional
+#%end
+
 
 import os
 import sys
@@ -200,7 +209,7 @@ except ImportError as e:
 
     raise ImportError("You must installed GRASS GIS to run this program.")
 
-__LOCAL__ = ['sensor', 'projection', 'orbit', 'polarizations', 'acquisition_mode',
+__LOCAL__ = ['sensor', 'projection', 'orbit', 'polarization', 'acquisition_mode',
              'start', 'stop', 'product', 'spacing', 'samples', 'lines']
 
 
@@ -266,7 +275,7 @@ class FinderImport(object):
 
     For *attributes the following parameters can be used
     ::
-        >>> ['sensor', 'projection', 'orbit', 'polarizations', 'acquisition_mode', 'start', 'stop', 'product', 'spacing', 'samples', 'lines']
+        >>> ['sensor', 'projection', 'orbit', 'polarization', 'acquisition_mode', 'start', 'stop', 'product', 'spacing', 'samples', 'lines']
 
 
     Import Sentinel 1A files with polarization VV and VH from a directory in current mapset and reproject it
@@ -353,10 +362,7 @@ class FinderImport(object):
                         gs.fatal(_('Projection of dataset does not appear to match current location. '
                                    'Force reprojecting dataset by -r flag.'))
 
-                if os.path.exists(f):
-                    pass
-                else:
-                    self.__import_file(f, module, args)
+                self.__import_file(f, module, args)
 
     def create_mapset(self, mapset, dbase=None, location=None):
         """
@@ -376,7 +382,7 @@ class FinderImport(object):
         None
         """
         module = 'g.mapset'
-        gs.run_command(module, mapset=mapset, dbase=dbase, location=location)
+        gs.run_command(module, flags='c', mapset=mapset, dbase=dbase, location=location)
 
     def print_products(self):
         """
@@ -501,6 +507,7 @@ def main():
                             product=options['product'], spacing=options['spacing'], sample=options['sample'],
                             lines=options['lines'])
 
+
     if flags['p']:
         importer.print_products()
         return 0
@@ -518,7 +525,6 @@ def main():
 
 if __name__ == "__main__":
     options, flags = gs.parser()
-    options = tuple_multi_string(dict)
+    options = tuple_multi_string(options)
     options = change_dict_value(options, '', None)
-
     sys.exit(main())
