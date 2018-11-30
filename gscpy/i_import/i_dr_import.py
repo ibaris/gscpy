@@ -111,19 +111,19 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 try:
     from osgeo import gdal, osr
 except ImportError as e:
     gs.fatal(_("Flag -r requires GDAL library: {}").format(e))
 
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 
 class DirImport(object):
     """
-    Import data into a mapset from a file with considering a certain pattern.
+    Import data into a mapset from a file with considering certain patterns.
 
     Parameters
     ----------
