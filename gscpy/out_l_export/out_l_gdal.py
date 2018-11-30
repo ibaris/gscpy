@@ -124,14 +124,14 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 try:
     from osgeo import gdal, osr
 except ImportError as e:
     gs.fatal(_("Flag -r requires GDAL library: {}").format(e))
 
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 
 class OutLGdal(object):
@@ -147,7 +147,7 @@ class OutLGdal(object):
     pattern : str, optional
         The pattern of file names.
     exclude : str, optional
-        Which files or pattern should be excluded?
+        Which files or patterns should be excluded?
     mapset : str, optional
         Name of mapset to list (default: current search path); '*' for all mapsets in location.
     region : str, optional
