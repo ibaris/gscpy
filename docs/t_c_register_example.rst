@@ -1,5 +1,5 @@
-Spatio-temporal data handling
------------------------------
+Spatio-temporal data handling in General
+----------------------------------------
 To better handle the long time series of maps, we create temporal datasets which serve as containers for the time
 series and we will further manipulate them instead of individual maps. Usually, we create empty datasets of type
 strds (space-time raster dataset) and after that we register the raster files into the strds.

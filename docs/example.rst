@@ -28,6 +28,10 @@ Contents
    data
    g_c_mapset_example
    ds1_download_example
+   geocode_example
+   sentinel_finder_example
+   t_c_register_sentinel_example
+   t_raster_mapcalc_example
    i_dr_input_example
    t_c_register_example
 
