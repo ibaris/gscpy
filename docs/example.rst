@@ -34,4 +34,5 @@ Contents
    t_raster_mapcalc_example
    i_dr_input_example
    t_c_register_example
+   pchain
 
