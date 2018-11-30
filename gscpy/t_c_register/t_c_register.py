@@ -189,14 +189,14 @@ try:
     import grass.script as gs
     from grass.exceptions import CalledModuleError
 except ImportError:
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 try:
     from osgeo import gdal, osr
 except ImportError as e:
     gs.fatal(_("Flag -r requires GDAL library: {}").format(e))
 
-    raise ImportError("You must installed GRASS GIS to run this program.")
+    raise ImportError("You have to install GRASS GIS to run this program.")
 
 
 class CRegister(object):
@@ -219,7 +219,7 @@ class CRegister(object):
         Valid start date and time of the first map. Format for absolute time: "yyyy-mm-dd HH:MM:SS +HHMM", relative
         time is of type integer.
     end : str
-        Valid end date and time of all map. Format for absolute time: "yyyy-mm-dd HH:MM:SS +HHMM", relative time is
+        Valid end date and time of last map. Format for absolute time: "yyyy-mm-dd HH:MM:SS +HHMM", relative time is
         of type integer.
     temporaltype : {"absolute", "relative"}
         The temporal type of the space time datase. Default is absolute.
@@ -234,7 +234,7 @@ class CRegister(object):
     pattern : str, optional
         The pattern of file names.
     exclude : str, optional
-        Which files or pattern should be excluded?
+        Which files or patterns should be excluded?
     mapset : str, optional
         Name of mapset to list (default: current search path); '*' for all mapsets in location.
     region : str, optional
