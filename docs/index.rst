@@ -10,7 +10,7 @@ Welcome to gscpy's documentation!
    :maxdepth: 2
    :titlesonly:
 
-   introduction
+   Introduction
    installation
    example
    annex_technical
