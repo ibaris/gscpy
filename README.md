@@ -86,8 +86,13 @@ You can find the full documentation <a href="https://gscpy.readthedocs.io/en/lat
 * **Ismail Baris** - *Initial work* - (i.baris@outlook.de)
 * **Nils v. Norsinski**
 
+# Further Information
+This project was developed as part of a Grass GIS Module which is part of the 
+master's degree Geoinformatics at Friedrich-Schiller-Universität Jena.
+
 # Acknowledgments
 *  <a href="https://github.com/johntruckenbrodt">John Truckenbrodt </a>
+
 
 ---
 

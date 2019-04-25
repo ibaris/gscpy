@@ -3,7 +3,8 @@ Introduction
 The goal is the development of Python GRASS modules for the automatic download, processing and analysis of Sentinel-1
 data. All modules can be executed in GRASS or in a terminal. The aim of this work was that a user can process all data
 without much effort and import them directly into GRASS GIS for further analysis. By entering certain metadata you can
-use this module to search for newly processed files and import them into a database.
+use this module to search for newly processed files and import them into a database. This project was developed as part
+of a Grass GIS Module which is part of the master's degree Geoinformatics at Friedrich-Schiller-Universitaet Jena.
 
 
 Here is an overview of the content:
